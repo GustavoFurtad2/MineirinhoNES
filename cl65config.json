@@ -1,0 +1,4 @@
+{
+  "executable": "C:\\cc65\\bin\\cl65",
+  "params": "--target nes ./src/demo.s --verbose -o mineirinho.nes"
+}
