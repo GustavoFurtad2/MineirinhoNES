@@ -1,6 +1,6 @@
 # MineirinhoNES
 
-MineirinhoNES is a recreation of the original game for the old NES console
+MineirinhoNES is a demake/recreation of the original pc game for the old NES console
 
 # How to compile
 
