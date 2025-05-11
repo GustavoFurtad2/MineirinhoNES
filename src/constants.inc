@@ -26,3 +26,7 @@ BOOTS_TILE          = $0A
 PANTS_TILE          = $0B
 ARM_TILE            = $0C
 FLEXED_ARM_TILE     = $0D
+HEART_TILE          = $0E
+
+NUMBER_0_TILE       = $0F
+NUMBER_9_TILE       = $17

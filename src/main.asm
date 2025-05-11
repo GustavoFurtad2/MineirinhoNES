@@ -12,6 +12,13 @@
   hatOffsetX: .res 1
   hatOffsetY: .res 1
   hatOffsetLimitX: .res 1
+  playerHealth: .res 1
+  numberToDraw: .res 1
+  numberX: .res 1
+  numberY: .res 1
+  remainder: .res 1
+  digit1: .res 1
+  digit2: .res 1
 
 .segment "CODE"
 
@@ -36,7 +43,7 @@
   JSR updatePads
 
   JSR updatePlayer
-  JSR drawPlayer
+  JSR drawGame
 
   LDA #$00
   STA $2005
@@ -55,10 +62,19 @@
 .endproc
 
 .proc reset_handler
+
+  LDA #$00
+  STA digit1
+  LDA #$05
+  STA digit2
+  
   LDA #$80
   STA playerX
   LDA #$10
   STA playerY
+
+  LDA #$03
+  STA playerHealth
 
   SEI
   CLD
@@ -90,24 +106,24 @@ vblankwait2:
 
   LDX #$00
   
-load_palletes:
+loadPalletes:
 
   LDA palettes, X
   STA PPUDATA
 
   INX
   CPX #$10
-  BNE load_palletes
+  BNE loadPalletes
 
   LDX #$00
 
-load_sprites:
+loadSprites:
 
   LDA sprites, X
   STA $0200, X
   INX
-  CPX #$28
-  BNE load_sprites
+  CPX #$34
+  BNE loadSprites
 
 vblankwait:
 
@@ -193,7 +209,7 @@ continue:
 
 .endproc
 
-.proc drawPlayer
+.proc drawGame
 
   ; face
   LDA playerY
@@ -430,7 +446,7 @@ drawArms:
   ADC #$08
   STA $0227
 
-  JMP exitSubrotine
+  JMP drawHUD
 
 drawFlexedArms:
 
@@ -524,6 +540,174 @@ continueDrawFlexedArm2:
   ADC #$08
   STA $0227
 
+drawHUD:
+
+  LDA #$0A
+  STA $0228
+  
+  LDA #HEART_TILE
+  STA $0229
+
+  LDA #$01
+  STA $022A
+
+  LDA #$02
+  STA $022B
+
+drawPlayerHealth:
+
+  ; digit 1
+
+  LDX digit1
+  CPX #$00
+  BEQ configDigit2XOneDigit
+
+  LDA #$0A
+  STA $022C
+
+  LDX digit1
+  CPX #$06
+  BCC digit1LessThan6
+  BEQ digit1Equals6
+
+; digit1BiggerThan6
+
+  CLC
+  LDA #NUMBER_0_TILE
+  ADC digit1
+  SEC
+  SBC #$01
+  STA $022D
+
+  LDA #$00
+  STA $022E
+
+  JMP continueConfigDigit1
+
+digit1Equals6:
+
+  LDA #NUMBER_9_TILE
+  STA $022D
+
+  LDA #%11000000
+  STA $022E
+
+  JMP continueConfigDigit1
+
+digit1LessThan6:  
+    
+  CLC
+  LDA #NUMBER_0_TILE
+  ADC digit1
+  STA $022D
+
+  LDA #$00
+  STA $022E
+
+continueConfigDigit1:
+
+  LDA #$0B
+  STA $022F
+
+  JMP configDigit2XTwoDigits
+
+configDigit2XOneDigit:
+
+  LDA #$0B
+  STA $0233
+
+  LDA #$FE
+  STA $022C
+
+  JMP drawDigit2
+
+configDigit2XTwoDigits:
+
+  LDA #$12
+  STA $0233
+
+drawDigit2:
+  
+  LDA #$0A
+  STA $0230
+
+  LDX digit2
+  CPX #$06
+  BCC digit2LessThan6
+  BEQ digit2Equals6
+
+; digit1BiggerThan6
+
+  CLC
+  LDA #NUMBER_0_TILE
+  ADC digit2
+  SEC
+  SBC #$01
+  STA $0231
+
+  LDA #$00
+  STA $0232
+
+  JMP continueConfigDigit2
+
+digit2Equals6:
+
+  LDA #NUMBER_9_TILE
+  STA $0231
+
+  LDA #%11000000
+  STA $0232
+
+  JMP continueConfigDigit2
+
+digit2LessThan6:
+    
+  CLC
+  LDA #NUMBER_0_TILE
+  ADC digit2
+  STA $0231
+
+  LDA #$00
+  STA $0232
+
+continueConfigDigit2:
+
+  LDA #$0A
+  STA $0230
+
+exitSubrotine:
+  RTS
+.endproc
+
+.proc incrementPlayerHealth
+
+  INC digit2
+  LDA digit2
+  CMP #$09
+  BCC exitSubrotine
+  LDA #$00
+  STA digit2
+  INC digit1
+
+exitSubrotine:
+
+  RTS
+.endproc
+
+.proc decrementPlayerHealth
+
+  LDA digit2
+  BEQ adjustTo9
+
+  DEC digit2
+  JMP exitSubrotine
+
+adjustTo9:
+
+  LDA #$09
+  STA digit2
+  DEc digit1
+
 exitSubrotine:
 
   RTS
@@ -546,6 +730,9 @@ sprites:
   .byte $70, $0B, $00, $80
   .byte $70, $0C, $00, $80
   .byte $70, $0D, $00, $80
+  .byte $70, $0E, $00, $80
+  .byte $FE, $0F, $00, $00
+  .byte $FE, $0F, $00, $00
 
 palettes:
 
