@@ -298,13 +298,13 @@ continueConfigHead:
   CPX #$00
   BEQ invertClothDetail2
 
-  LDA #%00000010
+  LDA #%00000011
 
   JMP continueDrawClothDetail2
 
 invertClothDetail2:
 
-  LDA #%01000010
+  LDA #%01000011
 
 continueDrawClothDetail2:
 
