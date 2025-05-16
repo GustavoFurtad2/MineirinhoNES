@@ -30,3 +30,10 @@ HEART_TILE          = $0E
 
 NUMBER_0_TILE       = $0F
 NUMBER_9_TILE       = $17
+
+LETTER_A_TILE       = $18
+LETTER_W_TILE       = $2D
+
+SLOT_TILE           = $31
+
+HAT_ITEM_TILE       = $32

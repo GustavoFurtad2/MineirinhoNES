@@ -19,6 +19,7 @@
   remainder: .res 1
   digit1: .res 1
   digit2: .res 1
+  equippedItem: .res 1 ; 0 == hat
 
 .segment "CODE"
 
@@ -122,7 +123,7 @@ loadSprites:
   LDA sprites, X
   STA $0200, X
   INX
-  CPX #$34
+  CPX #$3C
   BNE loadSprites
 
 vblankwait:
@@ -676,6 +677,36 @@ continueConfigDigit2:
   STA $0230
 
 exitSubrotine:
+
+ ; draw inventory current item slot
+
+  LDA #$0A
+  STA $0234
+
+  LDA #SLOT_TILE
+  STA $0235
+
+  LDA #$01
+  STA $0236
+
+  LDA #$F4
+  STA $0237
+
+  ; draw current equipped item
+
+  LDA #$0A
+  STA $0238
+  
+  LDA #HAT_ITEM_TILE
+  STA $0239
+
+  LDA #$03
+  STA $023A
+
+  LDA #$F4
+  STA $023B
+
+
   RTS
 .endproc
 
@@ -733,6 +764,8 @@ sprites:
   .byte $70, $0E, $00, $80
   .byte $FE, $0F, $00, $00
   .byte $FE, $0F, $00, $00
+  .byte $70, $0F, $00, $00
+  .byte $70, $0F, $00, $00
 
 palettes:
 
