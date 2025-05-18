@@ -20,6 +20,7 @@
   digit1: .res 1
   digit2: .res 1
   equippedItem: .res 1 ; 0 == hat
+  gamestate: .res 1  ; 0 == menu, 1 == in game level 1
 
 .segment "CODE"
 
@@ -41,10 +42,25 @@
   LDA #$02
   STA OAMDMA
 
-  JSR updatePads
+  JSR clearOAM
+
+  LDA gamestate
+  CMP #$01
+  BEQ handleInGame
+
+  JSR drawMenu
+  JSR updateMenu
+
+  JMP continue
+
+handleInGame:
 
   JSR updatePlayer
   JSR drawGame
+
+continue:
+
+  JSR updatePads
 
   LDA #$00
   STA $2005
@@ -109,7 +125,7 @@ vblankwait2:
   
 loadPalletes:
 
-  LDA palettes, X
+  LDA menuPalettes, X
   STA PPUDATA
 
   INX
@@ -123,7 +139,7 @@ loadSprites:
   LDA sprites, X
   STA $0200, X
   INX
-  CPX #$3C
+  CPX #$FF
   BNE loadSprites
 
 vblankwait:
@@ -737,11 +753,390 @@ adjustTo9:
 
   LDA #$09
   STA digit2
-  DEc digit1
+  DEC digit1
 
 exitSubrotine:
 
   RTS
+.endproc
+
+.proc drawMenu
+
+ LDA #$7C
+ STA $0200
+
+ LDA #LETTER_P_TILE
+ STA $0201
+
+ LDA #$02
+ STA $0202
+
+ LDA #$6C
+ STA $0203
+
+ LDA #$7C
+ STA $0204
+
+ LDA #LETTER_L_TILE
+ STA $0205
+
+ LDA #$02
+ STA $0206
+
+ LDA #$73
+ STA $0207
+
+ LDA #$7C
+ STA $0208
+
+ LDA #LETTER_A_TILE
+ STA $0209
+
+ LDA #$02
+ STA $020A
+
+ LDA #$7A
+ STA $020B
+
+ LDA #$7C
+ STA $020C
+
+ LDA #LETTER_Y_TILE
+ STA $020D
+
+ LDA #$02
+ STA $020E
+
+ LDA #$81
+ STA $020F
+
+ LDA #$2C
+ STA $0210
+
+ LDA #TITLE_MINEIRINHO_1
+ STA $0211
+
+ LDA #$01
+ STA $0212
+
+ LDA #$5F
+ STA $0213
+
+ LDA #$2C
+ STA $0214
+
+ LDA #TITLE_MINEIRINHO_2
+ STA $0215
+
+ LDA #$01
+ STA $0216
+
+ LDA #$67
+ STA $0217
+
+ LDA #$2C
+ STA $0218
+
+ LDA #TITLE_MINEIRINHO_3
+ STA $0219
+
+ LDA #$01
+ STA $021A
+
+ LDA #$6F
+ STA $021B
+ 
+ LDA #$2C
+ STA $021C
+
+ LDA #TITLE_MINEIRINHO_4
+ STA $021D
+
+ LDA #$01
+ STA $021E
+
+ LDA #$77
+ STA $021F
+
+ LDA #$2C
+ STA $0220
+
+ LDA #TITLE_MINEIRINHO_5
+ STA $0221
+
+ LDA #$01
+ STA $0222
+
+ LDA #$7F
+ STA $0223
+
+ LDA #$2C
+ STA $0224
+
+ LDA #TITLE_MINEIRINHO_6
+ STA $0225
+
+ LDA #$01
+ STA $0226
+
+ LDA #$87
+ STA $0227
+
+ LDA #$2C
+ STA $0228
+
+ LDA #TITLE_MINEIRINHO_7
+ STA $0229
+
+ LDA #$01
+ STA $022A
+
+ LDA #$8F
+ STA $022B
+
+ LDA #$34
+ STA $022C
+
+ LDA #TITLE_ULTRA_1
+ STA $022D
+
+ LDA #$01
+ STA $022E
+
+ LDA #$67
+ STA $022F
+
+ LDA #$34
+ STA $0230
+
+ LDA #TITLE_ULTRA_2
+ STA $0231
+
+ LDA #$01
+ STA $0232
+
+ LDA #$6F
+ STA $0233
+
+ LDA #$34
+ STA $0234
+
+ LDA #TITLE_ULTRA_3
+ STA $0235
+
+ LDA #$01
+ STA $0236
+
+ LDA #$77
+ STA $0237
+
+ LDA #$34
+ STA $0238
+
+ LDA #TITLE_ULTRA_4
+ STA $0239
+
+ LDA #$01
+ STA $023A
+
+ LDA #$7F
+ STA $023B
+
+ LDA #$34
+ STA $023C
+
+ LDA #TITLE_ULTRA_5
+ STA $023D
+
+ LDA #$01
+ STA $023E
+
+ LDA #$87
+ STA $023F
+
+ LDA #$3C
+ STA $0240
+
+ LDA #TITLE_ADVENTURES_1
+ STA $0241
+
+ LDA #$01
+ STA $0242
+
+ LDA #$5F
+ STA $0243
+
+ LDA #$3C
+ STA $0244
+
+ LDA #TITLE_ADVENTURES_2
+ STA $0245
+
+ LDA #$01
+ STA $0246
+
+ LDA #$67
+ STA $0247
+
+ LDA #$3C
+ STA $0248
+
+ LDA #TITLE_ADVENTURES_3
+ STA $0249
+
+ LDA #$01
+ STA $024A
+
+ LDA #$6F
+ STA $024B
+
+ LDA #$3C
+ STA $024C
+
+ LDA #TITLE_ADVENTURES_4
+ STA $024D
+
+ LDA #$01
+ STA $024E
+
+ LDA #$77
+ STA $024F
+
+ LDA #$3C
+ STA $0250
+
+ LDA #TITLE_ADVENTURES_5
+ STA $0251
+
+ LDA #$01
+ STA $0252
+
+ LDA #$7F
+ STA $0253
+
+ LDA #$3C
+ STA $0254
+
+ LDA #TITLE_ADVENTURES_6
+ STA $0255
+
+ LDA #$01
+ STA $0256
+
+ LDA #$87
+ STA $0257
+
+ LDA #$3C
+ STA $0258
+
+ LDA #TITLE_ADVENTURES_7
+ STA $0259
+
+ LDA #$01
+ STA $025A
+
+ LDA #$8F
+ STA $025B
+
+ LDA #$34
+ STA $025C
+
+ LDA #BLACK_TILE
+ STA $025D
+
+ LDA #$01
+ STA $025E
+
+ LDA #$5F
+ STA $025F
+
+ LDA #$34
+ STA $0260
+
+ LDA #BLACK_TILE
+ STA $0261
+
+ LDA #$01
+ STA $0262
+
+ LDA #$8F
+ STA $0263
+
+ RTS
+
+.endproc
+
+.proc updateMenu
+
+  LDA pad1
+  AND #BUTTON_A
+  BNE loadGame
+
+  JMP exitSubrotine
+
+loadGame:
+
+  LDA #$01
+  STA gamestate
+
+  JSR setupInGameLevel1
+
+exitSubrotine:
+
+  RTS
+
+.endproc
+
+.proc clearOAM
+
+  LDX #$00
+  LDA #$FF
+
+loop:
+
+  STA $200, X
+
+  INX
+  INX
+  INX
+  INX
+  
+  BNE loop
+
+  RTS
+.endproc
+
+.proc setupInGameLevel1
+
+  LDA #%00000000
+  STA PPUMASK
+
+  LDX PPUSTATUS
+  LDX #$3f
+  STX PPUADDR
+  LDX #$00
+  STX PPUADDR
+
+  LDX #$00
+  
+loadPalletes:
+
+  LDA level1Palettes, X
+  STA PPUDATA
+
+  INX
+  CPX #$20
+  BNE loadPalletes
+
+  LDA #%10010000
+  STA PPUCTRL
+  LDA #%00011110
+  STA PPUMASK
+
+  LDX #$00
+
+  RTS
+
 .endproc
 
 .segment "VECTORS"
@@ -751,33 +1146,94 @@ exitSubrotine:
 
 sprites:
 
-  .byte $70, $04, $00, $80
-  .byte $70, $05, $00, $80
-  .byte $70, $06, $00, $80
-  .byte $70, $07, $00, $80
-  .byte $70, $08, $00, $80
-  .byte $70, $09, $00, $80
-  .byte $70, $0A, $00, $80
-  .byte $70, $0B, $00, $80
-  .byte $70, $0C, $00, $80
-  .byte $70, $0D, $00, $80
-  .byte $70, $0E, $00, $80
-  .byte $FE, $0F, $00, $00
-  .byte $FE, $0F, $00, $00
-  .byte $70, $0F, $00, $00
-  .byte $70, $0F, $00, $00
+  .byte $F8, $00, $00, $80
+  .byte $F8, $00, $00, $80
+  .byte $F8, $00, $00, $80
+  .byte $F8, $00, $00, $80
+  .byte $F8, $00, $00, $80
+  .byte $F8, $00, $00, $80
+  .byte $F8, $00, $00, $80
+  .byte $F8, $00, $00, $80
+  .byte $F8, $00, $00, $80
+  .byte $F8, $00, $00, $80
+  .byte $F8, $00, $00, $80
+  .byte $F8, $00, $00, $80
+  .byte $F8, $00, $00, $80
+  .byte $F8, $00, $00, $80
+  .byte $F8, $00, $00, $80
+  .byte $F8, $00, $00, $80
+  .byte $F8, $00, $00, $80
+  .byte $F8, $00, $00, $80
+  .byte $F8, $00, $00, $80
+  .byte $F8, $00, $00, $80
+  .byte $F8, $00, $00, $80
+  .byte $F8, $00, $00, $80
+  .byte $F8, $00, $00, $80
+  .byte $F8, $00, $00, $80
+  .byte $F8, $00, $00, $80
+  .byte $F8, $00, $00, $80
+  .byte $F8, $00, $00, $80
+  .byte $F8, $00, $00, $80
+  .byte $F8, $00, $00, $80
+  .byte $F8, $00, $00, $80
+  .byte $F8, $00, $00, $80
+  .byte $F8, $00, $00, $80
+  .byte $F8, $00, $00, $80
+  .byte $F8, $00, $00, $80
+  .byte $F8, $00, $00, $80
+  .byte $F8, $00, $00, $80
+  .byte $F8, $00, $00, $80
+  .byte $F8, $00, $00, $80
+  .byte $F8, $00, $00, $80
+  .byte $F8, $00, $00, $80
+  .byte $F8, $00, $00, $80
+  .byte $F8, $00, $00, $80
+  .byte $F8, $00, $00, $80
+  .byte $F8, $00, $00, $80
+  .byte $F8, $00, $00, $80
+  .byte $F8, $00, $00, $80
+  .byte $F8, $00, $00, $80
+  .byte $F8, $00, $00, $80
+  .byte $F8, $00, $00, $80
+  .byte $F8, $00, $00, $80
+  .byte $F8, $00, $00, $80
+  .byte $F8, $00, $00, $80
+  .byte $F8, $00, $00, $80
+  .byte $F8, $00, $00, $80
+  .byte $F8, $00, $00, $80
+  .byte $F8, $00, $00, $80
+  .byte $F8, $00, $00, $80
+  .byte $F8, $00, $00, $80
+  .byte $F8, $00, $00, $80
+  .byte $F8, $00, $00, $80
+  .byte $F8, $00, $00, $80
+  .byte $F8, $00, $00, $80
+  .byte $F8, $00, $00, $80
+  .byte $F8, $00, $00, $80
 
-palettes:
+menuPalettes:
+
+  .byte $31, $36, $20, $28
+  .byte $29, $2E, $20, $28
+  .byte $29, $36, $20, $28
+  .byte $29, $36, $20, $28
+
+  .byte $31, $36, $20, $28
+  .byte $29, $2E, $20, $28
+  .byte $29, $36, $20, $28
+  .byte $29, $36, $20, $28
+
+level1Palettes:
 
   .byte $31, $36, $20, $28
   .byte $29, $11, $15, $1D
   .byte $29, $19, $20, $01
   .byte $29, $06, $26, $15
 
-  ; .byte $29, $1D, $27
-  ; .byte $29, $36, $27, $30
-  ; .byte $29, $19, $20, $21
-  ; .byte $29, $06, $26, $15
+  .byte $31, $36, $20, $28
+  .byte $29, $11, $15, $1D
+  .byte $29, $19, $20, $01
+  .byte $29, $06, $26, $15
 
 .segment "CHR"
 .incbin "game.chr"
