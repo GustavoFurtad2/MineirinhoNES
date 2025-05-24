@@ -11,7 +11,10 @@
   hatIsReturning: .res 1
   hatOffsetX: .res 1
   hatOffsetY: .res 1
+  hatX: .res 1
+  hatY: .res 1
   hatOffsetLimitX: .res 1
+  playerThrowingHatDirection: .res 1
   playerHealth: .res 1
   numberToDraw: .res 1
   numberX: .res 1
@@ -199,7 +202,7 @@ getButtonStates:
   LDA #$00
   STA playerIsWalking
 
-  JMP continue
+  JMP checkIfPressingB
 
 pressingLeft:
 
@@ -211,7 +214,7 @@ pressingLeft:
   LDA #$00
   STA playerDirection
 
-  JMP continue
+  JMP checkIfPressingB
 
 pressingRight:
 
@@ -222,8 +225,140 @@ pressingRight:
 
   STA playerDirection
 
-continue:
+  JMP checkIfPressingB
 
+checkIfPressingB:
+
+  LDA pad1
+  AND #BUTTON_B
+  BNE pressingB
+
+  JMP checkIfShouldUpdateHat
+
+pressingB:
+
+  LDA playerIsThrowingHat
+  CMP #$01
+  BEQ updateHat
+
+  LDA #$01
+  STA playerIsThrowingHat
+
+  LDA playerDirection
+  STA playerThrowingHatDirection
+
+  LDA playerX
+  STA hatX
+
+  LDA playerY
+  STA hatY
+
+  LDA playerThrowingHatDirection
+  CMP #$01
+  BEQ setHatOffsetRight
+
+setHatOffsetLeft:
+
+  LDA playerX
+  SEC
+  SBC #$1E
+  BPL storeLeftLimit
+  LDA #$00
+
+storeLeftLimit:
+
+  STA hatOffsetX
+  JMP updateHat
+
+setHatOffsetRight:
+
+  LDA playerX
+  CLC
+  ADC #$1E
+
+  CMP #$F0
+  BCC storeRightLimit
+
+  LDA #$F0
+
+storeRightLimit:
+
+  STA hatOffsetX
+  JMP updateHat
+
+  JMP updateHat
+
+checkIfShouldUpdateHat:
+
+  LDA playerIsThrowingHat
+  CMP #$01
+  BEQ updateHat
+
+  JMP exitSubrotine
+
+updateHat:
+
+  LDA hatIsReturning
+  CMP #$01
+  BEQ returnHat
+
+  LDA hatX
+  CMP hatOffsetX
+  BEQ setHatToReturn
+
+  LDA playerThrowingHatDirection
+  CMP #$00
+  BEQ moveHatLeft
+
+  JMP moveHatRight
+
+setHatToReturn:
+
+  LDA #$01
+  STA hatIsReturning
+
+  JMP returnHat
+
+returnHat:
+
+  LDA hatX
+  CMP playerX
+  BEQ stopHat
+
+  LDA hatX
+  CMP playerX
+  BCC moveHatRight
+  BCS moveHatLeft
+
+stopHat:
+
+  LDA #$00
+  STA playerIsThrowingHat
+  STA hatIsReturning
+
+  JMP exitSubrotine
+
+moveHatLeft:
+
+  LDA hatX
+  SEC
+  SBC #$02
+  STA hatX
+
+  JMP exitSubrotine
+
+moveHatRight:
+
+  LDA hatX
+  CLC
+  ADC #$02
+  STA hatX
+
+  JMP exitSubrotine
+
+exitSubrotine:
+
+  RTS
 .endproc
 
 .proc drawGame
@@ -283,9 +418,23 @@ continueConfigHead:
 
   ; hat
 
+  LDX playerIsThrowingHat
+  CPX #$01
+  BEQ applyOffset
+
+  LDA playerX
+  STA $020B
+
+  JMP continueConfigHat
+
+applyOffset:
+
+  LDA hatX
+  STA $020B
+
+continueConfigHat:
+
   LDA playerY
-  CLC
-  ADC hatOffsetY
   STA $0208
   
   LDA #HAT_TILE
@@ -293,13 +442,6 @@ continueConfigHead:
 
   LDA #$03
   STA $020A
-
-  LDA playerX
-  CLC
-  ADC hatOffsetX
-  CLC
-  ADC #$01
-  STA $020B
 
   ; cloth detail 2
 
