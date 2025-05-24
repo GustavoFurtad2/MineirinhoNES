@@ -84,6 +84,9 @@ continue:
 .proc reset_handler
 
   LDA #$00
+  STA gamestate
+
+  LDA #$00
   STA digit1
   LDA #$05
   STA digit2
