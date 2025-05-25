@@ -1,6 +1,6 @@
 # MineirinhoNES
 
-MineirinhoNES is a demake/recreation of the original pc game for the old NES console
+MineirinhoNES is a demake/recreation of the original pc game Miner Ultra Adventures(or Mineirinho Ultra Adventures in brazillian portuguese) for the old NES console
 
 # How to compile
 
