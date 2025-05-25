@@ -209,6 +209,10 @@ getButtonStates:
 
 pressingLeft:
 
+  LDA playerX
+  CMP #$09
+  BCC checkIfPressingB
+
   DEC playerX
 
   LDA #$01
@@ -220,6 +224,10 @@ pressingLeft:
   JMP checkIfPressingB
 
 pressingRight:
+
+  LDA playerX
+  CMP #$F0
+  BCS checkIfPressingB
 
   INC playerX
 
