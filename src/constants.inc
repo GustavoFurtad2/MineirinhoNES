@@ -28,6 +28,9 @@ ARM_TILE            = $0C
 FLEXED_ARM_TILE     = $0D
 HEART_TILE          = $0E
 
+RIGHT_FLEXED_BOOTS_TILE  = $1E
+LEFT_FLEXED_BOOTS_TILE   = $1F
+
 NUMBER_0_TILE       = $0F
 NUMBER_9_TILE       = $17
 

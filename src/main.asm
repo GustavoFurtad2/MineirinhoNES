@@ -24,6 +24,8 @@
   digit2: .res 1
   equippedItem: .res 1 ; 0 == hat
   gamestate: .res 1  ; 0 == menu, 1 == in game level 1
+  playerWalkingAnimationCounter: .res 1
+  playerWalkingAnimationFrame: .res 1
 
 .segment "CODE"
 
@@ -85,6 +87,8 @@ continue:
 
   LDA #$00
   STA gamestate
+  STA playerWalkingAnimationCounter
+  STA playerWalkingAnimationFrame
 
   LDA #$00
   STA digit1
@@ -202,8 +206,14 @@ getButtonStates:
   AND #BUTTON_RIGHT
   BNE pressingRight
 
+  LDA playerIsWalking
+  CMP #$00
+  BEQ checkIfPressingB
+
   LDA #$00
   STA playerIsWalking
+  STA playerWalkingAnimationCounter
+  STA playerWalkingAnimationFrame
 
   JMP checkIfPressingB
 
@@ -221,6 +231,11 @@ pressingLeft:
   LDA #$00
   STA playerDirection
 
+  LDA playerWalkingAnimationCounter
+  CLC
+  ADC #$01
+  STA playerWalkingAnimationCounter
+
   JMP checkIfPressingB
 
 pressingRight:
@@ -235,6 +250,11 @@ pressingRight:
   STA playerIsWalking
 
   STA playerDirection
+
+  LDA playerWalkingAnimationCounter
+  CLC
+  ADC #$01
+  STA playerWalkingAnimationCounter
 
   JMP checkIfPressingB
 
@@ -530,13 +550,52 @@ continueDrawClothDetail1:
 
   ; boots
 
+
+  LDA playerWalkingAnimationCounter
+  CMP #$06
+  BCS setWalkingBootsAnim1
+
   LDA playerY
   CLC 
   ADC #$12
   STA $0218
-  
+
+
   LDA #BOOTS_TILE
   STA $0219
+
+  JMP continueDrawBoots1
+
+setWalkingBootsAnim1:
+
+  LDA playerY
+  CLC 
+  ADC #$10
+  STA $0218
+
+  LDA playerWalkingAnimationCounter
+  CMP #$12
+  BCS setWalkingBootsAnim2
+
+  LDA #RIGHT_FLEXED_BOOTS_TILE
+  STA $0219
+
+  JMP continueDrawBoots1
+
+setWalkingBootsAnim2:
+
+  LDA #LEFT_FLEXED_BOOTS_TILE
+  STA $0219
+
+  LDA playerWalkingAnimationCounter
+  CMP #$18
+  BNE continueDrawBoots1
+
+  LDA #$00
+  STA playerWalkingAnimationCounter
+
+continueDrawBoots1:
+
 
   LDX playerDirection
   CPX #$00
@@ -544,13 +603,13 @@ continueDrawClothDetail1:
 
   LDA #%00000010
 
-  JMP continueDrawBoots
+  JMP continueDrawBoots2
 
 invertBoots:
 
   LDA #%01000010
 
-continueDrawBoots:
+continueDrawBoots2:
 
   STA $021A
 
