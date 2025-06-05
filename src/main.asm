@@ -7,14 +7,15 @@
   pad1: .res 1
   playerDirection: .res 1
   playerIsWalking: .res 1
-  playerIsThrowingHat: .res 1
-  hatIsReturning: .res 1
-  hatOffsetX: .res 1
-  hatOffsetY: .res 1
-  hatX: .res 1
-  hatY: .res 1
-  hatOffsetLimitX: .res 1
-  playerThrowingHatDirection: .res 1
+  playerIsThrowingItem: .res 1
+  playerWasThrowingItem: .res 1
+  itemIsReturning: .res 1
+  itemOffsetX: .res 1
+  itemOffsetY: .res 1
+  itemX: .res 1
+  itemY: .res 1
+  itemOffsetLimitX: .res 1
+  playerThrowingItemDirection: .res 1
   playerHealth: .res 1
   numberToDraw: .res 1
   numberX: .res 1
@@ -26,6 +27,9 @@
   gamestate: .res 1  ; 0 == menu, 1 == in game level 1
   playerWalkingAnimationCounter: .res 1
   playerWalkingAnimationFrame: .res 1
+
+  mustThrowableItemReturn: .res 1
+  throwableItemOffsetLim: .res 1
 
   checkCosAX: .res 1
   checkCosAY: .res 1
@@ -118,6 +122,14 @@ continue:
   STA crazyPizzaY
   STA crazyPizzaIsActive
   STA equippedItem
+  STA playerIsThrowingItem
+  STA playerWasThrowingItem
+
+  LDA #$1E
+  STA throwableItemOffsetLim
+
+  LDA #$01
+  STA mustThrowableItemReturn
 
   LDA #$00
   STA digit1
@@ -293,48 +305,50 @@ checkIfPressingB:
   AND #BUTTON_B
   BNE pressingB
 
-  JMP checkIfShouldUpdateHat
+  JMP checkIfShouldUpdateItem
 
 pressingB:
 
-  LDA playerIsThrowingHat
+  LDA playerIsThrowingItem
   CMP #$01
-  BEQ updateHat
+  BEQ updateItem
 
+  LDA playerIsThrowingItem
+  STA playerWasThrowingItem
   LDA #$01
-  STA playerIsThrowingHat
+  STA playerIsThrowingItem
 
   LDA playerDirection
-  STA playerThrowingHatDirection
+  STA playerThrowingItemDirection
 
   LDA playerX
-  STA hatX
+  STA itemX
 
   LDA playerY
-  STA hatY
+  STA itemY
 
-  LDA playerThrowingHatDirection
+  LDA playerThrowingItemDirection
   CMP #$01
-  BEQ setHatOffsetRight
+  BEQ setItemOffsetRight
 
-setHatOffsetLeft:
+setItemOffsetLeft:
 
   LDA playerX
   SEC
-  SBC #$1E
+  SBC throwableItemOffsetLim
   BPL storeLeftLimit
   LDA #$00
 
 storeLeftLimit:
 
-  STA hatOffsetX
-  JMP updateHat
+  STA itemOffsetX
+  JMP updateItem
 
-setHatOffsetRight:
+setItemOffsetRight:
 
   LDA playerX
   CLC
-  ADC #$1E
+  ADC throwableItemOffsetLim
 
   CMP #$F0
   BCC storeRightLimit
@@ -343,76 +357,93 @@ setHatOffsetRight:
 
 storeRightLimit:
 
-  STA hatOffsetX
-  JMP updateHat
+  STA itemOffsetX
+  JMP updateItem
 
-  JMP updateHat
+  JMP updateItem
 
-checkIfShouldUpdateHat:
+checkIfShouldUpdateItem:
 
-  LDA playerIsThrowingHat
+  LDA playerIsThrowingItem
   CMP #$01
-  BEQ updateHat
+  BEQ updateItem
 
   JMP exitSubrotine
 
-updateHat:
+updateItem:
 
-  LDA hatIsReturning
+  LDA itemIsReturning
   CMP #$01
-  BEQ returnHat
+  BEQ returnItem
 
-  LDA hatX
-  CMP hatOffsetX
-  BEQ setHatToReturn
+  LDA itemX
+  CMP itemOffsetX
+  BEQ checkIfShouldItemReturn
 
-  LDA playerThrowingHatDirection
+  LDA playerThrowingItemDirection
   CMP #$00
-  BEQ moveHatLeft
+  BEQ moveItemLeft
 
-  JMP moveHatRight
+  JMP moveItemRight
 
-setHatToReturn:
+checkIfShouldItemReturn:
+
+  LDA mustThrowableItemReturn
+  CMP #$01
+  BEQ setItemToReturn
 
   LDA #$01
-  STA hatIsReturning
-
-  JMP returnHat
-
-returnHat:
-
-  LDA hatX
-  CMP playerX
-  BEQ stopHat
-
-  LDA hatX
-  CMP playerX
-  BCC moveHatRight
-  BCS moveHatLeft
-
-stopHat:
-
+  STA mustThrowableItemReturn
   LDA #$00
-  STA playerIsThrowingHat
-  STA hatIsReturning
+  STA equippedItem
+  STA playerIsThrowingItem
+  STA itemIsReturning
+
+  RTS
+
+setItemToReturn:
+
+  LDA #$01
+  STA itemIsReturning
+
+  JMP returnItem
+
+returnItem:
+
+  LDA itemX
+  CMP playerX
+  BEQ stopItem
+
+  LDA itemX
+  CMP playerX
+  BCC moveItemRight
+  BCS moveItemLeft
+
+stopItem:
+
+  LDA playerIsThrowingItem
+  STA playerWasThrowingItem
+  LDA #$00
+  STA playerIsThrowingItem
+  STA itemIsReturning
 
   JMP exitSubrotine
 
-moveHatLeft:
+moveItemLeft:
 
-  LDA hatX
+  LDA itemX
   SEC
   SBC #$02
-  STA hatX
+  STA itemX
 
   JMP exitSubrotine
 
-moveHatRight:
+moveItemRight:
 
-  LDA hatX
+  LDA itemX
   CLC
   ADC #$02
-  STA hatX
+  STA itemX
 
   JMP exitSubrotine
 
@@ -478,18 +509,22 @@ continueConfigHead:
 
   ; hat
 
-  LDX playerIsThrowingHat
-  CPX #$01
-  BEQ applyOffset
-
   LDA playerX
   STA $020B
+
+  LDX equippedItem
+  CPX #$00
+  BNE continueConfigHat
+
+  LDX playerIsThrowingItem
+  CPX #$01
+  BEQ applyOffset
 
   JMP continueConfigHat
 
 applyOffset:
 
-  LDA hatX
+  LDA itemX
   STA $020B
 
 continueConfigHat:
@@ -954,7 +989,7 @@ continue:
   LDA #$0A
   STA $0238
   
-  LDA #ITEM_TILE
+  LDA #INVENTORY_ITEM_TILE
   CLC
   ADC equippedItem
   STA $0239
@@ -969,7 +1004,7 @@ continue:
 
   LDA crazyPizzaIsActive
   CMP #$00
-  BEQ exitSubrotine
+  BEQ checkIfShouldDrawThrowingItem
 
   LDA crazyPizzaX
   STA checkCosAX
@@ -1009,17 +1044,59 @@ continue:
 
   LDA isColliding
   CMP #$01
+  BEQ checkIfCanCollectPizza
+
+  JMP checkIfShouldDrawThrowingItem
+
+checkIfCanCollectPizza:
+
+  LDA playerIsThrowingItem
+  CMP #$00
   BEQ collectPizza
 
-  RTS
+  JMP checkIfShouldDrawThrowingItem
 
 collectPizza:
 
   LDA #$00
   STA crazyPizzaIsActive
+  STA mustThrowableItemReturn
+
+  LDA #$3E
+  STA throwableItemOffsetLim
 
   LDA #$01
   STA equippedItem
+
+checkIfShouldDrawThrowingItem:
+
+  LDA equippedItem
+  CMP #$00
+  BEQ exitSubrotine
+
+  LDA playerIsThrowingItem
+  CMP #$01
+  BEQ drawThrowingItem
+
+  RTS
+
+drawThrowingItem:
+
+  LDA itemY
+  CLC
+  ADC #$08
+  STA $0240
+
+  LDA #ITEM_TILE
+  CLC
+  ADC equippedItem
+  STA $0241
+
+  LDA #$03
+  STA $0242
+
+  LDA itemX
+  STA $0243
 
 exitSubrotine:
 
