@@ -394,6 +394,8 @@ checkIfShouldItemReturn:
 
   LDA #$01
   STA mustThrowableItemReturn
+  LDA #$1E
+  STA throwableItemOffsetLim
   LDA #$00
   STA equippedItem
   STA playerIsThrowingItem
