@@ -22,10 +22,35 @@
   remainder: .res 1
   digit1: .res 1
   digit2: .res 1
-  equippedItem: .res 1 ; 0 == hat
+  equippedItem: .res 1 ; 0 == hat, 1 == crazy pizza
   gamestate: .res 1  ; 0 == menu, 1 == in game level 1
   playerWalkingAnimationCounter: .res 1
   playerWalkingAnimationFrame: .res 1
+
+  checkCosAX: .res 1
+  checkCosAY: .res 1
+  checkCosBX: .res 1
+  checkCosBY: .res 1
+
+  checkCosALimX: .res 1
+  checkCosALimY: .res 1
+
+  checkCosBLimX: .res 1
+  checkCosBLimY: .res 1
+
+  checkCosAWidth: .res 1
+  checkCosAHeight: .res 1
+
+  checkCosBWidth: .res 1
+  checkCosBHeight: .res 1
+
+  isColliding: .res 1
+
+  crazyPizzaX: .res 1
+  crazyPizzaY: .res 1
+
+  crazyPizzaIsActive: .res 1
+
 
 .segment "CODE"
 
@@ -89,6 +114,10 @@ continue:
   STA gamestate
   STA playerWalkingAnimationCounter
   STA playerWalkingAnimationFrame
+  STA crazyPizzaX
+  STA crazyPizzaY
+  STA crazyPizzaIsActive
+  STA equippedItem
 
   LDA #$00
   STA digit1
@@ -904,7 +933,7 @@ continueConfigDigit2:
   LDA #$0A
   STA $0230
 
-exitSubrotine:
+continue:
 
  ; draw inventory current item slot
 
@@ -925,7 +954,9 @@ exitSubrotine:
   LDA #$0A
   STA $0238
   
-  LDA #HAT_ITEM_TILE
+  LDA #ITEM_TILE
+  CLC
+  ADC equippedItem
   STA $0239
 
   LDA #$03
@@ -934,6 +965,63 @@ exitSubrotine:
   LDA #$F4
   STA $023B
 
+  ; draw crazy pizza
+
+  LDA crazyPizzaIsActive
+  CMP #$00
+  BEQ exitSubrotine
+
+  LDA crazyPizzaX
+  STA checkCosAX
+  
+  LDA crazyPizzaY
+  STA checkCosAY
+
+  LDA #$0B
+  STA checkCosAWidth
+  STA checkCosAHeight
+
+  LDA playerX
+  STA checkCosBX
+
+  LDA playerY
+  STA checkCosBY
+
+  LDA #$0D
+  STA checkCosBWidth
+
+  LDA #$20
+  STA checkCosBHeight
+
+  JSR checkCos
+
+  LDA crazyPizzaY
+  STA $023C
+
+  LDA #CRAZY_PIZZA_TILE
+  STA $023D
+
+  LDA #$03
+  STA $023E
+
+  LDA crazyPizzaX
+  STA $023F
+
+  LDA isColliding
+  CMP #$01
+  BEQ collectPizza
+
+  RTS
+
+collectPizza:
+
+  LDA #$00
+  STA crazyPizzaIsActive
+
+  LDA #$01
+  STA equippedItem
+
+exitSubrotine:
 
   RTS
 .endproc
@@ -1320,6 +1408,13 @@ loop:
 
 .proc setupInGameLevel1
 
+  LDA #$2F
+  STA crazyPizzaX
+  LDA #$1A
+  STA crazyPizzaY
+  LDA #$01
+  STA crazyPizzaIsActive
+
   LDA #%00000000
   STA PPUMASK
 
@@ -1346,6 +1441,68 @@ loadPalletes:
   STA PPUMASK
 
   LDX #$00
+
+  RTS
+
+.endproc
+
+.proc checkCos
+
+  LDA #$00
+  STA isColliding
+  STA checkCosALimX
+  STA checkCosALimY
+  STA checkCosBLimX
+  STA checkCosBLimY
+
+  LDA checkCosALimX
+  CLC
+  ADC checkCosAX
+  CLC
+  ADC checkCosAWidth
+  STA checkCosALimX
+
+  LDA checkCosALimY
+  CLC
+  ADC checkCosAY
+  CLC
+  ADC checkCosAHeight
+  STA checkCosALimY
+
+  LDA checkCosBLimX
+  CLC
+  ADC checkCosBX
+  CLC
+  ADC checkCosBWidth
+  STA checkCosBLimX
+
+  LDA checkCosBLimY
+  CLC
+  ADC checkCosBY
+  CLC
+  ADC checkCosBHeight
+  STA checkCosBLimY
+
+  LDA checkCosAX
+  CMP checkCosBLimX
+  BCS exitSubrotine
+
+  LDA checkCosALimX
+  CMP checkCosBX
+  BCC exitSubrotine
+
+  LDA checkCosAY
+  CMP checkCosBLimY
+  BCS exitSubrotine
+
+  LDA checkCosALimY
+  CMP checkCosBY
+  BCC exitSubrotine
+
+  LDA #$01
+  STA isColliding
+
+exitSubrotine:
 
   RTS
 
