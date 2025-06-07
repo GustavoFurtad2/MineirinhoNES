@@ -23,7 +23,7 @@
   remainder: .res 1
   digit1: .res 1
   digit2: .res 1
-  equippedItem: .res 1 ; 0 == hat, 1 == crazy pizza
+  equippedItem: .res 1 ; 0 == hat, 1 == crazy pizza, 2 == big hamburguer, 3 == pepper
   gamestate: .res 1  ; 0 == menu, 1 == in game level 1
   playerWalkingAnimationCounter: .res 1
   playerWalkingAnimationFrame: .res 1
@@ -55,6 +55,9 @@
 
   collectableItemIndex: .res 1
   collectableItemIsActive: .res 1
+
+  pepperAnimationIndex: .res 1
+  pepperAnimationCounter: .res 1
 
 .segment "CODE"
 
@@ -125,6 +128,8 @@ continue:
   STA playerIsThrowingItem
   STA playerWasThrowingItem
   STA collectableItemIndex
+  STA pepperAnimationIndex
+  STA pepperAnimationCounter
 
   LDA #$1E
   STA throwableItemOffsetLim
@@ -1092,10 +1097,49 @@ drawThrowingItem:
   ADC #$08
   STA $0240
 
+  LDA equippedItem
+  CMP #$03
+  BEQ isPepper
+
   LDA #ITEM_TILE
   CLC
   ADC equippedItem
   STA $0241
+
+  JMP continueDrawThrowingItem
+
+isPepper:
+
+  LDA #PEPPER_FIRE_FRAME_1
+  CLC
+  ADC pepperAnimationIndex
+  STA $0241
+
+  LDA pepperAnimationIndex
+  CMP #$05 ; total pepper fire frames
+  BNE incrementPepperAnimationCounter
+
+  JMP continueDrawThrowingItem
+
+incrementPepperAnimationCounter:
+
+  LDA pepperAnimationCounter
+  CLC
+  ADC #$01
+  STA pepperAnimationCounter
+
+  CMP #$02
+  BNE continueDrawThrowingItem
+
+  LDA #$00
+  STA pepperAnimationCounter
+
+  LDA pepperAnimationIndex
+  CLC
+  ADC #$01
+  STA pepperAnimationIndex
+
+continueDrawThrowingItem:
 
   LDA #$03
   STA $0242
@@ -1496,7 +1540,7 @@ loop:
   STA collectableItemY
   LDA #$01
   STA collectableItemIsActive
-  LDA #$02
+  LDA #$03
   STA collectableItemIndex
 
   LDA #%00000000
