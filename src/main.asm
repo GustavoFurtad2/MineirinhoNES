@@ -383,6 +383,12 @@ updateItem:
   BEQ returnItem
 
   LDA itemX
+  CMP #$00
+  BEQ checkIfShouldItemReturn
+  CMP #$FF
+  BEQ checkIfShouldItemReturn
+
+  LDA itemX
   CMP itemOffsetX
   BEQ checkIfShouldItemReturn
 
