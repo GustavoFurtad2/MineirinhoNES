@@ -50,11 +50,11 @@
 
   isColliding: .res 1
 
-  crazyPizzaX: .res 1
-  crazyPizzaY: .res 1
+  collectableItemX: .res 1
+  collectableItemY: .res 1
 
-  crazyPizzaIsActive: .res 1
-
+  collectableItemIndex: .res 1
+  collectableItemIsActive: .res 1
 
 .segment "CODE"
 
@@ -118,12 +118,13 @@ continue:
   STA gamestate
   STA playerWalkingAnimationCounter
   STA playerWalkingAnimationFrame
-  STA crazyPizzaX
-  STA crazyPizzaY
-  STA crazyPizzaIsActive
+  STA collectableItemX
+  STA collectableItemY
+  STA collectableItemIsActive
   STA equippedItem
   STA playerIsThrowingItem
   STA playerWasThrowingItem
+  STA collectableItemIndex
 
   LDA #$1E
   STA throwableItemOffsetLim
@@ -1002,16 +1003,16 @@ continue:
   LDA #$F4
   STA $023B
 
-  ; draw crazy pizza
+  ; draw collectable item
 
-  LDA crazyPizzaIsActive
+  LDA collectableItemIsActive
   CMP #$00
   BEQ checkIfShouldDrawThrowingItem
 
-  LDA crazyPizzaX
+  LDA collectableItemX
   STA checkCosAX
   
-  LDA crazyPizzaY
+  LDA collectableItemY
   STA checkCosAY
 
   LDA #$0B
@@ -1032,42 +1033,44 @@ continue:
 
   JSR checkCos
 
-  LDA crazyPizzaY
+  LDA collectableItemY
   STA $023C
 
-  LDA #CRAZY_PIZZA_TILE
+  LDA #ITEM_TILE
+  CLC
+  ADC collectableItemIndex
   STA $023D
 
   LDA #$03
   STA $023E
 
-  LDA crazyPizzaX
+  LDA collectableItemX
   STA $023F
 
   LDA isColliding
   CMP #$01
-  BEQ checkIfCanCollectPizza
+  BEQ checkIfCanCollectItem
 
   JMP checkIfShouldDrawThrowingItem
 
-checkIfCanCollectPizza:
+checkIfCanCollectItem:
 
   LDA playerIsThrowingItem
   CMP #$00
-  BEQ collectPizza
+  BEQ collectItem
 
   JMP checkIfShouldDrawThrowingItem
 
-collectPizza:
+collectItem:
 
   LDA #$00
-  STA crazyPizzaIsActive
+  STA collectableItemIsActive
   STA mustThrowableItemReturn
 
   LDA #$3E
   STA throwableItemOffsetLim
 
-  LDA #$01
+  LDA collectableItemIndex
   STA equippedItem
 
 checkIfShouldDrawThrowingItem:
@@ -1488,11 +1491,13 @@ loop:
 .proc setupInGameLevel1
 
   LDA #$2F
-  STA crazyPizzaX
+  STA collectableItemX
   LDA #$1A
-  STA crazyPizzaY
+  STA collectableItemY
   LDA #$01
-  STA crazyPizzaIsActive
+  STA collectableItemIsActive
+  LDA #$02
+  STA collectableItemIndex
 
   LDA #%00000000
   STA PPUMASK
