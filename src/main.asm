@@ -1264,13 +1264,13 @@ loop:
 
 .proc setupInGameLevel1
 
-    LDA #$2F
-    STA collectableItemX
-    LDA #$1A
-    STA collectableItemY
-    LDA #$01
-    STA collectableItemIsActive
-    STA playerDirection
+    ; LDA #$2F
+    ; STA collectableItemX
+    ; LDA #$1A
+    ; STA collectableItemY
+    ; LDA #$01
+    ; STA collectableItemIsActive
+
     LDA #$03
     STA collectableItemIndex
 
@@ -1279,6 +1279,8 @@ loop:
     LDA #$B1
     STA playerY
 
+    LDA #$01
+    STA playerDirection
 
     LDA #%00000000
     STA PPUMASK
