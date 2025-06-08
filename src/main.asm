@@ -50,6 +50,11 @@
 
     isColliding: .res 1
 
+    isCollidingUp: .res 1
+    isCollidingDown: .res 1
+    isCollidingLeft: .res 1
+    isCollidingRight: .res 1
+
     collectableItemX: .res 1
     collectableItemY: .res 1
 
@@ -131,6 +136,11 @@ continue:
     STA collectableItemIndex
     STA pepperAnimationIndex
     STA pepperAnimationCounter
+    STA isCollidingUp
+    STA isCollidingDown
+    STA isCollidingLeft
+    STA isCollidingRight
+
 
     LDA #$1E
     STA throwableItemOffsetLim
@@ -274,6 +284,9 @@ getButtonStates:
 .endproc
 
 .proc updatePlayer
+
+    JSR setupCos
+    JSR checkCos
 
     LDA pad1
     AND #BUTTON_LEFT
@@ -1266,13 +1279,13 @@ loop:
 
     ; LDA #$2F
     ; STA collectableItemX
-    ; LDA #$1A
+    ; LDA #$B0
     ; STA collectableItemY
     ; LDA #$01
     ; STA collectableItemIsActive
 
-    LDA #$03
-    STA collectableItemIndex
+    ; LDA #$03
+    ; STA collectableItemIndex
 
     LDA #$08
     STA playerX
@@ -1349,7 +1362,7 @@ doneLoadingWorld:
 
 .endproc
 
-.proc checkCos
+.proc setupCos
 
     LDA #$00
     STA isColliding
@@ -1386,6 +1399,10 @@ doneLoadingWorld:
     ADC checkCosBHeight
     STA checkCosBLimY
 
+.endproc
+
+.proc checkCos
+
     LDA checkCosAX
     CMP checkCosBLimX
     BCS exitSubrotine
@@ -1409,6 +1426,122 @@ exitSubrotine:
 
     RTS
 
+.endproc
+
+.proc checkCosUp
+
+    LDA #$00
+    STA isCollidingUp
+
+    LDA checkCosAY
+    CMP checkCosBLimY
+    BCS exitSubrotine
+
+    LDA checkCosALimY
+    CMP checkCosBY
+    BCC exitSubrotine
+
+    LDA checkCosAX
+    CMP checkCosBLimX
+    BCS exitSubrotine
+
+    LDA checkCosALimX
+    CMP checkCosBX
+    BCC exitSubrotine
+
+    LDA #$01
+    STA isCollidingUp
+
+exitSubrotine:
+
+    RTS
+.endproc
+
+.proc checkCosDown
+
+    LDA #$00
+    STA isCollidingDown
+
+    LDA checkCosALimY
+    CMP checkCosBY
+    BCC exitSubrotine
+
+    LDA checkCosAY
+    CMP checkCosBLimY
+    BCS exitSubrotine
+
+    LDA checkCosAX
+    CMP checkCosBLimX
+    BCS exitSubrotine
+
+    LDA checkCosALimX
+    CMP checkCosBX
+    BCC exitSubrotine
+
+    LDA #$01
+    STA isCollidingDown
+
+exitSubrotine:
+
+    RTS
+.endproc
+
+.proc checkCosLeft
+
+    LDA #$00
+    STA isCollidingLeft
+
+    LDA checkCosAX
+    CMP checkCosBLimX
+    BCS exitSubrotine
+
+    LDA checkCosALimX
+    CMP checkCosBX
+    BCC exitSubrotine
+
+    LDA checkCosAY
+    CMP checkCosBLimY
+    BCS exitSubrotine
+
+    LDA checkCosALimY
+    CMP checkCosBY
+    BCC exitSubrotine
+
+    LDA #$01
+    STA isCollidingLeft
+
+exitSubrotine:
+
+    RTS
+.endproc
+
+.proc checkCosRight
+
+    LDA #$00
+    STA isCollidingRight
+
+    LDA checkCosALimX
+    CMP checkCosBX
+    BCC exitSubrotine
+
+    LDA checkCosAX
+    CMP checkCosBLimX
+    BCS exitSubrotine
+
+    LDA checkCosAY
+    CMP checkCosBLimY
+    BCS exitSubrotine
+
+    LDA checkCosALimY
+    CMP checkCosBY
+    BCC exitSubrotine
+
+    LDA #$01
+    STA isCollidingRight
+
+exitSubrotine:
+
+    RTS
 .endproc
 
 .segment "VECTORS"
