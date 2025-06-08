@@ -791,7 +791,7 @@ continueSetupFlexedArm1Y:
 
 invertFlexedArm1:
 
-    
+    LDA #%10000000
 
 continueDrawFlexedArm1:
     STA $0222
