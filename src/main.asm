@@ -59,6 +59,8 @@
     pepperAnimationIndex: .res 1
     pepperAnimationCounter: .res 1
 
+    world: .res 2
+
 .segment "CODE"
 
 .proc irq_handler
@@ -1569,6 +1571,42 @@ loadPalletes:
     CPX #$20
     BNE loadPalletes
 
+    LDA #<level1_part1Data
+    STA world
+    LDA #>level1_part1Data
+
+    STA world+1
+
+    ; setup ppu for nametable data
+    BIT PPUSTATUS
+    LDA #$20
+    STA PPUADDR
+    LDA #$00
+    STA PPUADDR
+
+    LDX #$00
+    LDY #$00
+    loadWorld:
+
+    LDA (world), Y
+    STA PPUDATA
+    INY
+    CPX #$03
+    BNE :+
+    CPY #$C0
+    BEQ doneLoadingWorld
+:
+
+    CPY #$00
+    BNE loadWorld
+    INX
+    INC world+1
+    JMP loadWorld
+
+doneLoadingWorld:
+
+    LDX #$00
+
     LDA #%10010000
     STA PPUCTRL
     LDA #%00011110
@@ -1737,6 +1775,10 @@ level1Palettes:
     .byte $29, $11, $15, $1D
     .byte $29, $19, $20, $01
     .byte $29, $06, $26, $15
+
+level1_part1Data:
+
+  .incbin "level1_part1.bin"
 
 .segment "CHR"
 .incbin "game.chr"
