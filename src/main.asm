@@ -87,7 +87,6 @@
     CMP #$01
     BEQ handleInGame
 
-    JSR drawMenu
     JSR updateMenu
 
     JMP continue
@@ -188,8 +187,42 @@ loadPalletes:
     STA PPUDATA
 
     INX
-    CPX #$10
+    CPX #$20
     BNE loadPalletes
+
+    LDA #<menuLevelData
+    STA world
+    LDA #>menuLevelData
+
+    STA world+1
+
+    ; setup ppu for nametable data
+    BIT PPUSTATUS
+    LDA #$20
+    STA PPUADDR
+    LDA #$00
+    STA PPUADDR
+
+    LDX #$00
+    LDY #$00
+    loadWorld:
+
+    LDA (world), Y
+    STA PPUDATA
+    INY
+    CPX #$03
+    BNE :+
+    CPY #$C0
+    BEQ doneLoadingWorld
+:
+
+    CPY #$00
+    BNE loadWorld
+    INX
+    INC world+1
+    JMP loadWorld
+
+doneLoadingWorld:
 
     LDX #$00
 
@@ -1194,312 +1227,6 @@ exitSubrotine:
     RTS
 .endproc
 
-.proc drawMenu
-
-    LDA #$7C
-    STA $0200
-
-    LDA #LETTER_P_TILE
-    STA $0201
-
-    LDA #$02
-    STA $0202
-
-    LDA #$6C
-    STA $0203
-
-    LDA #$7C
-    STA $0204
-
-    LDA #LETTER_L_TILE
-    STA $0205
-
-    LDA #$02
-    STA $0206
-
-    LDA #$73
-    STA $0207
-
-    LDA #$7C
-    STA $0208
-
-    LDA #LETTER_A_TILE
-    STA $0209
-
-    LDA #$02
-    STA $020A
-
-    LDA #$7A
-    STA $020B
-
-    LDA #$7C
-    STA $020C
-
-    LDA #LETTER_Y_TILE
-    STA $020D
-
-    LDA #$02
-    STA $020E
-
-    LDA #$81
-    STA $020F
-
-    LDA #$2C
-    STA $0210
-
-    LDA #TITLE_MINEIRINHO_1
-    STA $0211
-
-    LDA #$01
-    STA $0212
-
-    LDA #$5F
-    STA $0213
-
-    LDA #$2C
-    STA $0214
-
-    LDA #TITLE_MINEIRINHO_2
-    STA $0215
-
-    LDA #$01
-    STA $0216
-
-    LDA #$67
-    STA $0217
-
-    LDA #$2C
-    STA $0218
-
-    LDA #TITLE_MINEIRINHO_3
-    STA $0219
-
-    LDA #$01
-    STA $021A
-
-    LDA #$6F
-    STA $021B
-    
-    LDA #$2C
-    STA $021C
-
-    LDA #TITLE_MINEIRINHO_4
-    STA $021D
-
-    LDA #$01
-    STA $021E
-
-    LDA #$77
-    STA $021F
-
-    LDA #$2C
-    STA $0220
-
-    LDA #TITLE_MINEIRINHO_5
-    STA $0221
-
-    LDA #$01
-    STA $0222
-
-    LDA #$7F
-    STA $0223
-
-    LDA #$2C
-    STA $0224
-
-    LDA #TITLE_MINEIRINHO_6
-    STA $0225
-
-    LDA #$01
-    STA $0226
-
-    LDA #$87
-    STA $0227
-
-    LDA #$2C
-    STA $0228
-
-    LDA #TITLE_MINEIRINHO_7
-    STA $0229
-
-    LDA #$01
-    STA $022A
-
-    LDA #$8F
-    STA $022B
-
-    LDA #$34
-    STA $022C
-
-    LDA #TITLE_ULTRA_1
-    STA $022D
-
-    LDA #$01
-    STA $022E
-
-    LDA #$67
-    STA $022F
-
-    LDA #$34
-    STA $0230
-
-    LDA #TITLE_ULTRA_2
-    STA $0231
-
-    LDA #$01
-    STA $0232
-
-    LDA #$6F
-    STA $0233
-
-    LDA #$34
-    STA $0234
-
-    LDA #TITLE_ULTRA_3
-    STA $0235
-
-    LDA #$01
-    STA $0236
-
-    LDA #$77
-    STA $0237
-
-    LDA #$34
-    STA $0238
-
-    LDA #TITLE_ULTRA_4
-    STA $0239
-
-    LDA #$01
-    STA $023A
-
-    LDA #$7F
-    STA $023B
-
-    LDA #$34
-    STA $023C
-
-    LDA #TITLE_ULTRA_5
-    STA $023D
-
-    LDA #$01
-    STA $023E
-
-    LDA #$87
-    STA $023F
-
-    LDA #$3C
-    STA $0240
-
-    LDA #TITLE_ADVENTURES_1
-    STA $0241
-
-    LDA #$01
-    STA $0242
-
-    LDA #$5F
-    STA $0243
-
-    LDA #$3C
-    STA $0244
-
-    LDA #TITLE_ADVENTURES_2
-    STA $0245
-
-    LDA #$01
-    STA $0246
-
-    LDA #$67
-    STA $0247
-
-    LDA #$3C
-    STA $0248
-
-    LDA #TITLE_ADVENTURES_3
-    STA $0249
-
-    LDA #$01
-    STA $024A
-
-    LDA #$6F
-    STA $024B
-
-    LDA #$3C
-    STA $024C
-
-    LDA #TITLE_ADVENTURES_4
-    STA $024D
-
-    LDA #$01
-    STA $024E
-
-    LDA #$77
-    STA $024F
-
-    LDA #$3C
-    STA $0250
-
-    LDA #TITLE_ADVENTURES_5
-    STA $0251
-
-    LDA #$01
-    STA $0252
-
-    LDA #$7F
-    STA $0253
-
-    LDA #$3C
-    STA $0254
-
-    LDA #TITLE_ADVENTURES_6
-    STA $0255
-
-    LDA #$01
-    STA $0256
-
-    LDA #$87
-    STA $0257
-
-    LDA #$3C
-    STA $0258
-
-    LDA #TITLE_ADVENTURES_7
-    STA $0259
-
-    LDA #$01
-    STA $025A
-
-    LDA #$8F
-    STA $025B
-
-    LDA #$34
-    STA $025C
-
-    LDA #BLACK_TILE
-    STA $025D
-
-    LDA #$01
-    STA $025E
-
-    LDA #$5F
-    STA $025F
-
-    LDA #$34
-    STA $0260
-
-    LDA #BLACK_TILE
-    STA $0261
-
-    LDA #$01
-    STA $0262
-
-    LDA #$8F
-    STA $0263
-
-    RTS
-
-.endproc
-
 .proc updateMenu
 
     LDA pad1
@@ -1759,14 +1486,14 @@ menuPalettes:
     .byte $29, $36, $20, $28
     .byte $29, $36, $20, $28
 
-    .byte $31, $36, $20, $28
+    .byte $31, $20, $1D, $27
     .byte $29, $2E, $20, $28
     .byte $29, $36, $20, $28
     .byte $29, $36, $20, $28
 
 level1Palettes:
 
-    .byte $31, $36, $20, $28
+    .byte $31, $2A, $07, $17
     .byte $29, $11, $15, $1D
     .byte $29, $19, $20, $01
     .byte $29, $06, $26, $15
@@ -1775,10 +1502,14 @@ level1Palettes:
     .byte $29, $11, $15, $1D
     .byte $29, $19, $20, $01
     .byte $29, $06, $26, $15
+
+menuLevelData:
+
+    .incbin "menu.bin"
 
 level1_part1Data:
 
-  .incbin "level1_part1.bin"
+    .incbin "level1_part1.bin"
 
 .segment "CHR"
 .incbin "game.chr"
