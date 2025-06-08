@@ -142,11 +142,6 @@ continue:
     STA digit1
     LDA #$05
     STA digit2
-    
-    LDA #$80
-    STA playerX
-    LDA #$10
-    STA playerY
 
     LDA #$03
     STA playerHealth
@@ -1275,8 +1270,15 @@ loop:
     STA collectableItemY
     LDA #$01
     STA collectableItemIsActive
+    STA playerDirection
     LDA #$03
     STA collectableItemIndex
+
+    LDA #$08
+    STA playerX
+    LDA #$B1
+    STA playerY
+
 
     LDA #%00000000
     STA PPUMASK
