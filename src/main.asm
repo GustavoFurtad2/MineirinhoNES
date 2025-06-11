@@ -532,9 +532,15 @@ loopCos:
 
     INX
 
-    LDA #$08
+    LDA level1_part1Cos, X
     STA checkCosAWidth
-    STA checkCosBHeight
+
+    INX
+
+    LDA level1_part1Cos, X
+    STA checkCosAHeight
+
+    INX
 
     LDA playerX
     SEC
@@ -607,9 +613,15 @@ loopCos:
 
     INX
 
-    LDA #$08
+    LDA level1_part1Cos, X
     STA checkCosAWidth
+
+    INX
+
+    LDA level1_part1Cos, X
     STA checkCosAHeight
+
+    INX
 
     LDA playerX
     CLC
@@ -681,9 +693,15 @@ loopCos:
 
     INX
 
-    LDA #$08
+    LDA level1_part1Cos, X
     STA checkCosAWidth
+
+    INX
+
+    LDA level1_part1Cos, X
     STA checkCosAHeight
+
+    INX
 
     LDA playerX
     STA checkCosBX
@@ -743,9 +761,15 @@ loopCos:
 
     INX
 
-    LDA #$08
+    LDA level1_part1Cos, X
     STA checkCosAWidth
+
+    INX
+
+    LDA level1_part1Cos, X
     STA checkCosAHeight
+
+    INX
 
     LDA playerX
     STA checkCosBX
@@ -1868,8 +1892,8 @@ level1_part1Data:
 
 level1_part1Cos:
 
-    .byte $A8, $B8
-    .byte $1A, $B8
+    .byte $A8, $C0, $08, $07
+    .byte $1A, $B8, $08, $07
 
 .segment "CHR"
 .incbin "game.chr"
