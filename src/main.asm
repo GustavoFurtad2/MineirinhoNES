@@ -50,10 +50,8 @@
 
     isColliding: .res 1
 
-    isCollidingUp: .res 1
-    isCollidingDown: .res 1
-    isCollidingLeft: .res 1
-    isCollidingRight: .res 1
+    isCollidingHorizontal: .res 1
+    isCollidingVertical: .res 1
 
     collectableItemX: .res 1
     collectableItemY: .res 1
@@ -136,11 +134,8 @@ continue:
     STA collectableItemIndex
     STA pepperAnimationIndex
     STA pepperAnimationCounter
-    STA isCollidingUp
-    STA isCollidingDown
-    STA isCollidingLeft
-    STA isCollidingRight
-
+    STA isCollidingHorizontal
+    STA isCollidingVertical
 
     LDA #$1E
     STA throwableItemOffsetLim
@@ -285,9 +280,6 @@ getButtonStates:
 
 .proc updatePlayer
 
-    JSR setupCos
-    JSR checkCos
-
     LDA pad1
     AND #BUTTON_LEFT
     BNE pressingLeft
@@ -295,6 +287,14 @@ getButtonStates:
     LDA pad1
     AND #BUTTON_RIGHT
     BNE pressingRight
+
+    LDA pad1
+    AND #BUTTON_UP
+    BNE pressingUp
+
+    LDA pad1
+    AND #BUTTON_DOWN
+    BNE pressingDown
 
     LDA playerIsWalking
     CMP #$00
@@ -313,20 +313,8 @@ pressingLeft:
     CMP #$09
     BCC checkIfPressingB
 
-    DEC playerX
-
-    LDA #$01
-    STA playerIsWalking
-
-    LDA #$00
-    STA playerDirection
-
-    LDA playerWalkingAnimationCounter
-    CLC
-    ADC #$01
-    STA playerWalkingAnimationCounter
-
-    JMP checkIfPressingB
+    JSR checkIfPlayerCanWalkLeft
+    JMP checkIfPressingUp
 
 pressingRight:
 
@@ -334,18 +322,33 @@ pressingRight:
     CMP #$F0
     BCS checkIfPressingB
 
-    INC playerX
+    JSR checkIfPlayerCanWalkRight
+    JMP checkIfPressingUp
 
-    LDA #$01
-    STA playerIsWalking
+checkIfPressingUp:
 
-    STA playerDirection
+    LDA pad1
+    AND #BUTTON_UP
+    BNE pressingUp
 
-    LDA playerWalkingAnimationCounter
-    CLC
-    ADC #$01
-    STA playerWalkingAnimationCounter
+    JMP checkIfPressingDown
 
+checkIfPressingDown:
+
+    LDA pad1
+    AND #BUTTON_DOWN
+    BNE pressingDown
+
+    JMP checkIfPressingB
+
+pressingUp:
+
+    JSR checkIfPlayerCanWalkUp
+    JMP checkIfPressingB
+
+pressingDown:
+
+    JSR checkIfPlayerCanWalkDown
     JMP checkIfPressingB
 
 checkIfPressingB:
@@ -505,6 +508,278 @@ moveItemRight:
     JMP exitSubrotine
 
 exitSubrotine:
+
+    RTS
+.endproc
+
+
+.proc checkIfPlayerCanWalkLeft
+
+    LDX #$00
+    LDY #$00
+
+    STX isCollidingHorizontal
+
+loopCos:
+
+    LDA level1_part1Cos, X
+    STA checkCosAX
+
+    INX
+
+    LDA level1_part1Cos, X
+    STA checkCosAY
+
+    INX
+
+    LDA #$08
+    STA checkCosAWidth
+    STA checkCosBHeight
+
+    LDA playerX
+    SEC
+    SBC #$01
+    STA checkCosBX
+
+    LDA playerY
+    STA checkCosBY
+
+    LDA #$0D
+    STA checkCosBWidth
+
+    LDA #$20
+    STA checkCosBHeight
+
+    JSR setupCos
+
+    JSR checkCosHorizontal
+
+    LDA isCollidingHorizontal
+    CMP #$01
+    BEQ collisionDetected
+
+    INY
+    CPY #LEVEL_1_PART1_TOTAL_COS
+    BNE loopCos
+
+    DEC playerX
+
+    LDA #$01
+    STA playerIsWalking
+
+    LDA #$00
+    STA playerDirection
+
+    LDA playerWalkingAnimationCounter
+    CLC
+    ADC #$01
+    STA playerWalkingAnimationCounter
+
+    RTS
+
+collisionDetected:
+
+    LDA #$00
+    STA playerIsWalking
+    STA playerWalkingAnimationFrame
+    STA playerWalkingAnimationCounter
+
+    RTS
+.endproc
+
+.proc checkIfPlayerCanWalkRight
+
+    LDX #$00
+    LDY #$00
+
+    STX isCollidingHorizontal
+
+loopCos:
+
+
+    LDA level1_part1Cos, X
+    STA checkCosAX
+
+    INX
+
+    LDA level1_part1Cos, X
+    STA checkCosAY
+
+    INX
+
+    LDA #$08
+    STA checkCosAWidth
+    STA checkCosAHeight
+
+    LDA playerX
+    CLC
+    ADC #$01
+    STA checkCosBX
+
+    LDA playerY
+    STA checkCosBY
+
+    LDA #$0D
+    STA checkCosBWidth
+
+    LDA #$20
+    STA checkCosBHeight
+
+    JSR setupCos
+
+    JSR checkCosHorizontal
+
+    LDA isCollidingHorizontal
+    CMP #$01
+    BEQ collisionDetected
+
+    INY
+    CPY #LEVEL_1_PART1_TOTAL_COS
+    BNE loopCos
+
+    INC playerX
+
+    LDA #$01
+    STA playerIsWalking
+
+    STA playerDirection
+
+    LDA playerWalkingAnimationCounter
+    CLC
+    ADC #$01
+    STA playerWalkingAnimationCounter
+
+    RTS
+
+collisionDetected:
+
+    LDA #$00
+    STA playerIsWalking
+    STA playerWalkingAnimationFrame
+    STA playerWalkingAnimationCounter
+
+    RTS
+.endproc
+
+.proc checkIfPlayerCanWalkUp
+
+    LDX #$00
+    LDY #$00
+
+    STX isCollidingVertical
+
+loopCos:
+
+
+    LDA level1_part1Cos, X
+    STA checkCosAX
+
+    INX
+
+    LDA level1_part1Cos, X
+    STA checkCosAY
+
+    INX
+
+    LDA #$08
+    STA checkCosAWidth
+    STA checkCosAHeight
+
+    LDA playerX
+    STA checkCosBX
+
+    LDA playerY
+    SEC
+    SBC #$01
+    STA checkCosBY
+
+    LDA #$0D
+    STA checkCosBWidth
+
+    LDA #$20
+    STA checkCosBHeight
+
+    JSR setupCos
+
+    JSR checkCosVertical
+
+    LDA isCollidingVertical
+    CMP #$01
+    BEQ collisionDetected
+
+    INY
+    CPY #LEVEL_1_PART1_TOTAL_COS
+    BNE loopCos
+
+    DEC playerY
+
+    RTS
+
+collisionDetected:
+
+    LDA #$00
+
+    RTS
+.endproc
+
+
+.proc checkIfPlayerCanWalkDown
+
+    LDX #$00
+    LDY #$00
+
+    STX isCollidingVertical
+
+loopCos:
+
+
+    LDA level1_part1Cos, X
+    STA checkCosAX
+
+    INX
+
+    LDA level1_part1Cos, X
+    STA checkCosAY
+
+    INX
+
+    LDA #$08
+    STA checkCosAWidth
+    STA checkCosAHeight
+
+    LDA playerX
+    STA checkCosBX
+
+    LDA playerY
+    CLC
+    ADC #$01
+    STA checkCosBY
+
+    LDA #$0D
+    STA checkCosBWidth
+
+    LDA #$20
+    STA checkCosBHeight
+
+    JSR setupCos
+
+    JSR checkCosVertical
+
+    LDA isCollidingVertical
+    CMP #$01
+    BEQ collisionDetected
+
+    INY
+    CPY #LEVEL_1_PART1_TOTAL_COS
+    BNE loopCos
+
+    INC playerY
+
+    RTS
+
+collisionDetected:
+
+    LDA #$00
 
     RTS
 .endproc
@@ -1287,7 +1562,8 @@ loop:
     ; LDA #$03
     ; STA collectableItemIndex
 
-    LDA #$08
+    ; LDA #$08
+    LDA #$4F
     STA playerX
     LDA #$B1
     STA playerY
@@ -1428,10 +1704,18 @@ exitSubrotine:
 
 .endproc
 
-.proc checkCosUp
+.proc checkCosHorizontal
 
     LDA #$00
-    STA isCollidingUp
+    STA isCollidingHorizontal
+
+    LDA checkCosALimX
+    CMP checkCosBX
+    BCC exitSubrotine
+
+    LDA checkCosAX
+    CMP checkCosBLimX
+    BCS exitSubrotine
 
     LDA checkCosAY
     CMP checkCosBLimY
@@ -1441,26 +1725,18 @@ exitSubrotine:
     CMP checkCosBY
     BCC exitSubrotine
 
-    LDA checkCosAX
-    CMP checkCosBLimX
-    BCS exitSubrotine
-
-    LDA checkCosALimX
-    CMP checkCosBX
-    BCC exitSubrotine
-
     LDA #$01
-    STA isCollidingUp
+    STA isCollidingHorizontal
 
 exitSubrotine:
 
     RTS
 .endproc
 
-.proc checkCosDown
+.proc checkCosVertical
 
     LDA #$00
-    STA isCollidingDown
+    STA isCollidingVertical
 
     LDA checkCosALimY
     CMP checkCosBY
@@ -1479,65 +1755,7 @@ exitSubrotine:
     BCC exitSubrotine
 
     LDA #$01
-    STA isCollidingDown
-
-exitSubrotine:
-
-    RTS
-.endproc
-
-.proc checkCosLeft
-
-    LDA #$00
-    STA isCollidingLeft
-
-    LDA checkCosAX
-    CMP checkCosBLimX
-    BCS exitSubrotine
-
-    LDA checkCosALimX
-    CMP checkCosBX
-    BCC exitSubrotine
-
-    LDA checkCosAY
-    CMP checkCosBLimY
-    BCS exitSubrotine
-
-    LDA checkCosALimY
-    CMP checkCosBY
-    BCC exitSubrotine
-
-    LDA #$01
-    STA isCollidingLeft
-
-exitSubrotine:
-
-    RTS
-.endproc
-
-.proc checkCosRight
-
-    LDA #$00
-    STA isCollidingRight
-
-    LDA checkCosALimX
-    CMP checkCosBX
-    BCC exitSubrotine
-
-    LDA checkCosAX
-    CMP checkCosBLimX
-    BCS exitSubrotine
-
-    LDA checkCosAY
-    CMP checkCosBLimY
-    BCS exitSubrotine
-
-    LDA checkCosALimY
-    CMP checkCosBY
-    BCC exitSubrotine
-
-    LDA #$01
-    STA isCollidingRight
+    STA isCollidingVertical
 
 exitSubrotine:
 
@@ -1647,6 +1865,11 @@ menuLevelData:
 level1_part1Data:
 
     .incbin "level1_part1.bin"
+
+level1_part1Cos:
+
+    .byte $A8, $B8
+    .byte $1A, $B8
 
 .segment "CHR"
 .incbin "game.chr"
