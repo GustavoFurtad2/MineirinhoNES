@@ -550,10 +550,10 @@ loopCos:
     LDA playerY
     STA checkCosBY
 
-    LDA #$0D
+    LDA #PLAYER_WIDTH
     STA checkCosBWidth
 
-    LDA #$20
+    LDA #PLAYER_HEIGHT
     STA checkCosBHeight
 
     JSR setupCos
@@ -631,10 +631,10 @@ loopCos:
     LDA playerY
     STA checkCosBY
 
-    LDA #$0D
+    LDA #PLAYER_WIDTH
     STA checkCosBWidth
 
-    LDA #$20
+    LDA #PLAYER_HEIGHT
     STA checkCosBHeight
 
     JSR setupCos
@@ -711,10 +711,10 @@ loopCos:
     SBC #$01
     STA checkCosBY
 
-    LDA #$0D
+    LDA #PLAYER_WIDTH
     STA checkCosBWidth
 
-    LDA #$20
+    LDA #PLAYER_HEIGHT
     STA checkCosBHeight
 
     JSR setupCos
@@ -779,10 +779,10 @@ loopCos:
     ADC #$01
     STA checkCosBY
 
-    LDA #$0D
+    LDA #PLAYER_WIDTH
     STA checkCosBWidth
 
-    LDA #$20
+    LDA #PLAYER_HEIGHT
     STA checkCosBHeight
 
     JSR setupCos
