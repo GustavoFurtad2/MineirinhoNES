@@ -1892,8 +1892,11 @@ level1_part1Data:
 
 level1_part1Cos:
 
+    .byte $00, $D0, $18, $0E
+    .byte $58, $E0, $48, $0E
+    .byte $A0, $D0, $08, $07
     .byte $A8, $C0, $08, $07
-    .byte $1A, $B8, $08, $07
+    .byte $B0, $B0, $18, $07
 
 .segment "CHR"
 .incbin "game.chr"
