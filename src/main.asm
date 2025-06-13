@@ -31,6 +31,11 @@
     mustThrowableItemReturn: .res 1
     throwableItemOffsetLim: .res 1
 
+    isJumping: .res 1
+    isFalling: .res 1
+
+    jumpingYLimit: .res 1
+
     checkCosAX: .res 1
     checkCosAY: .res 1
     checkCosBX: .res 1
@@ -136,6 +141,9 @@ continue:
     STA pepperAnimationCounter
     STA isCollidingHorizontal
     STA isCollidingVertical
+    STA isJumping
+    STA isFalling
+    STA jumpingYLimit
 
     LDA #$1E
     STA throwableItemOffsetLim
@@ -292,20 +300,12 @@ getButtonStates:
     AND #BUTTON_UP
     BNE pressingUp
 
-    LDA pad1
-    AND #BUTTON_DOWN
-    BNE pressingDown
-
-    LDA playerIsWalking
-    CMP #$00
-    BEQ checkIfPressingB
-
     LDA #$00
     STA playerIsWalking
     STA playerWalkingAnimationCounter
     STA playerWalkingAnimationFrame
 
-    JMP checkIfPressingB
+    JMP checkIfPlayerShouldFall
 
 pressingLeft:
 
@@ -331,24 +331,33 @@ checkIfPressingUp:
     AND #BUTTON_UP
     BNE pressingUp
 
-    JMP checkIfPressingDown
+    JMP checkIfPlayerShouldFall
 
-checkIfPressingDown:
+checkIfPlayerShouldFall:
 
-    LDA pad1
-    AND #BUTTON_DOWN
-    BNE pressingDown
+    LDA isJumping
+    CMP #$00
+    BEQ checkIfPlayerIsFallingL
+
+    LDA isFalling
+    CMP #$01
+    BEQ checkIfPlayerIsFallingL
+
+    JMP pressingUp
+
+checkIfPlayerIsFallingL:
+
+    JSR checkIfPlayerIsFalling
 
     JMP checkIfPressingB
 
 pressingUp:
 
-    JSR checkIfPlayerCanWalkUp
-    JMP checkIfPressingB
+    LDA isFalling
+    CMP #$01
+    BEq checkIfPlayerShouldFall
 
-pressingDown:
-
-    JSR checkIfPlayerCanWalkDown
+    JSR checkIfPlayerCanJump
     JMP checkIfPressingB
 
 checkIfPressingB:
@@ -576,6 +585,14 @@ loopCos:
     LDA #$00
     STA playerDirection
 
+    LDA isJumping
+    CMP #$01
+    BEQ noAnim
+
+    LDA isFalling
+    CMP #$01
+    BEQ noAnim
+
     LDA playerWalkingAnimationCounter
     CLC
     ADC #$01
@@ -583,6 +600,7 @@ loopCos:
 
     RTS
 
+noAnim:
 collisionDetected:
 
     LDA #$00
@@ -656,6 +674,14 @@ loopCos:
 
     STA playerDirection
 
+    LDA isJumping
+    CMP #$01
+    BEQ noAnim
+
+    LDA isFalling
+    CMP #$01
+    BEQ noAnim
+
     LDA playerWalkingAnimationCounter
     CLC
     ADC #$01
@@ -663,8 +689,8 @@ loopCos:
 
     RTS
 
+noAnim:
 collisionDetected:
-
     LDA #$00
     STA playerIsWalking
     STA playerWalkingAnimationFrame
@@ -673,12 +699,20 @@ collisionDetected:
     RTS
 .endproc
 
-.proc checkIfPlayerCanWalkUp
+.proc checkIfPlayerCanJump
 
     LDX #$00
     LDY #$00
 
     STX isCollidingVertical
+
+    LDA isFalling
+    CMP #$01
+    BEQ exitSubrotine
+
+    LDA isJumping
+    CMP #$01
+    BEQ stillJumping
 
 loopCos:
 
@@ -729,7 +763,51 @@ loopCos:
     CPY #LEVEL_1_PART1_TOTAL_COS
     BNE loopCos
 
-    DEC playerY
+    LDA isFalling
+    CMP #$01
+    BEQ exitSubrotine
+
+    LDA isJumping
+    CMP #$01
+    BEQ stillJumping
+
+    LDA #$01
+    STA isJumping
+
+    LDA playerY
+    SEC
+    SBC #$1A
+    STA jumpingYLimit
+
+    LDA playerY
+    SEC
+    SBC PLAYER_Y_SPEED
+
+    LDA #$00
+
+    RTS
+
+stillJumping:
+
+    LDA playerY
+    CMP jumpingYLimit
+    BCC finishJump
+
+    SEC
+    SBC #PLAYER_Y_SPEED
+    STA playerY
+
+    LDA #$00
+
+    RTS
+
+finishJump:
+
+    LDA #$01
+    STA isFalling
+
+    LDA #$00
+    STA isJumping
 
     RTS
 
@@ -737,11 +815,12 @@ collisionDetected:
 
     LDA #$00
 
+exitSubrotine:
+
     RTS
 .endproc
 
-
-.proc checkIfPlayerCanWalkDown
+.proc checkIfPlayerIsFalling
 
     LDX #$00
     LDY #$00
@@ -797,13 +876,40 @@ loopCos:
     CPY #LEVEL_1_PART1_TOTAL_COS
     BNE loopCos
 
-    INC playerY
+    LDA playerY
+    SEC
+    SBC #$03
+    CMP checkCosBLimY
+    BCS setBLimY
+
+    LDA playerY
+    CLC
+    ADC #PLAYER_Y_SPEED
+    STA playerY
+
+    LDA #$01
+    STA isFalling
+    LDA #$00
+    
+    RTS
+
+setBLimY:
+
+    CLC
+    ADC #PLAYER_Y_SPEED
+    STA playerY
+
+    LDA #$01
+    STA isFalling
+    LDA #$00
 
     RTS
 
 collisionDetected:
 
     LDA #$00
+
+    STA isFalling
 
     RTS
 .endproc
@@ -1587,7 +1693,7 @@ loop:
     ; STA collectableItemIndex
 
     ; LDA #$08
-    LDA #$4F
+    LDA #$5F
     STA playerX
     LDA #$B1
     STA playerY
