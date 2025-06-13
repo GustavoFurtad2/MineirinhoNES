@@ -33,6 +33,7 @@
 
     isJumping: .res 1
     isFalling: .res 1
+    isSliding: .res 1
 
     jumpingYLimit: .res 1
 
@@ -54,6 +55,8 @@
     checkCosBHeight: .res 1
 
     isColliding: .res 1
+
+    lastCosID: .res 1
 
     isCollidingHorizontal: .res 1
     isCollidingVertical: .res 1
@@ -143,7 +146,9 @@ continue:
     STA isCollidingVertical
     STA isJumping
     STA isFalling
+    STA isSliding
     STA jumpingYLimit
+    STA lastCosID
 
     LDA #$1E
     STA throwableItemOffsetLim
@@ -337,17 +342,17 @@ checkIfPlayerShouldFall:
 
     LDA isJumping
     CMP #$00
-    BEQ checkIfPlayerIsFallingL
+    BEQ checkIfPlayerIsFallingOrSlidingL
 
     LDA isFalling
     CMP #$01
-    BEQ checkIfPlayerIsFallingL
+    BEQ checkIfPlayerIsFallingOrSlidingL
 
     JMP pressingUp
 
-checkIfPlayerIsFallingL:
+checkIfPlayerIsFallingOrSlidingL:
 
-    JSR checkIfPlayerIsFalling
+    JSR checkIfPlayerIsFallingOrSliding
 
     JMP checkIfPressingB
 
@@ -531,6 +536,8 @@ exitSubrotine:
 
 loopCos:
 
+    INX
+
     LDA level1_part1Cos, X
     STA checkCosAX
 
@@ -620,6 +627,7 @@ collisionDetected:
 
 loopCos:
 
+    INX
 
     LDA level1_part1Cos, X
     STA checkCosAX
@@ -716,6 +724,7 @@ collisionDetected:
 
 loopCos:
 
+    INX
 
     LDA level1_part1Cos, X
     STA checkCosAX
@@ -820,7 +829,7 @@ exitSubrotine:
     RTS
 .endproc
 
-.proc checkIfPlayerIsFalling
+.proc checkIfPlayerIsFallingOrSliding
 
     LDX #$00
     LDY #$00
@@ -829,6 +838,24 @@ exitSubrotine:
 
 loopCos:
 
+    LDA level1_part1Cos, X
+    CMP #$02
+    BEQ setIsSlliding
+
+    LDA #$00
+    STA isSliding
+
+    JMP continueLoopCos
+
+setIsSlliding:
+
+    STA lastCosID
+    LDA #$01
+    STA isSliding
+
+continueLoopCos:
+
+    INX
 
     LDA level1_part1Cos, X
     STA checkCosAX
@@ -910,6 +937,28 @@ collisionDetected:
     LDA #$00
 
     STA isFalling
+
+    LDA isSliding
+    CMP #$01
+    BNE exitSubrotine
+
+    LDA lastCosID
+    CMP #$00
+    BEQ exitSubrotine
+
+    CMP #$01
+    BEQ slideLeft
+
+    ; slide right
+    INC playerX
+
+    RTS
+
+slideLeft:
+
+    DEC playerX
+
+exitSubrotine:
 
     RTS
 .endproc
@@ -1997,11 +2046,22 @@ level1_part1Data:
 
 level1_part1Cos:
 
-    .byte $00, $D0, $18, $0E
-    .byte $58, $E0, $48, $0E
-    .byte $A0, $D0, $08, $07
-    .byte $A8, $C0, $08, $07
-    .byte $B0, $B0, $18, $07
+    .byte $00, $00, $D0, $18, $0E
+    .byte $00, $58, $E0, $48, $0E
+    .byte $00, $A0, $D0, $08, $07
+    .byte $00, $A8, $C0, $08, $07
+    .byte $00, $B0, $B0, $18, $07
+
+    .byte $02, $1F, $D0, $07, $07
+    .byte $02, $26, $D0, $07, $07
+    .byte $02, $2D, $D2, $07, $07
+    .byte $02, $34, $D3, $07, $07
+    .byte $02, $3B, $D4, $07, $07
+    .byte $02, $42, $D5, $07, $07
+    .byte $02, $49, $D6, $07, $07
+    .byte $02, $50, $D7, $07, $07
+    .byte $02, $57, $D8, $07, $07
+
 
 .segment "CHR"
 .incbin "game.chr"
