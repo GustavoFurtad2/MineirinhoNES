@@ -1692,8 +1692,7 @@ loop:
     ; LDA #$03
     ; STA collectableItemIndex
 
-    ; LDA #$08
-    LDA #$5F
+    LDA #$08
     STA playerX
     LDA #$B1
     STA playerY
