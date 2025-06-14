@@ -70,6 +70,26 @@
     pepperAnimationIndex: .res 1
     pepperAnimationCounter: .res 1
 
+    alien1X: .res 1
+    alien1Y: .res 1
+
+    alien1IsAlive: .res 1
+    alien1State: .res 1
+
+    alien1AnimationCounter: .res 1
+
+    alien1IsJumping: .res 1
+
+    alien1IsFalling: .res 1
+
+    alien1YLimit: .res 1
+
+    alien1isCollidingVertical: .res 1
+
+    alien1isCollidingHorizontal: .res 1
+    
+    alien1Direction: .res 1
+
     world: .res 2
 
 .segment "CODE"
@@ -105,6 +125,7 @@
 handleInGame:
 
     JSR updatePlayer
+    JSR updateAliens
     JSR drawGame
 
 continue:
@@ -149,6 +170,18 @@ continue:
     STA isSliding
     STA jumpingYLimit
     STA lastCosID
+    STA alien1X
+    STA alien1Y
+    STA alien1IsAlive
+    STA alien1State
+    STA alien1AnimationCounter
+    STA alien1IsJumping
+    STA alien1IsFalling
+    STA alien1YLimit
+    STA alien1isCollidingVertical
+    STA alien1isCollidingHorizontal
+    
+    STA alien1Direction
 
     LDA #$1E
     STA throwableItemOffsetLim
@@ -1591,7 +1624,7 @@ checkIfShouldDrawThrowingItem:
     CMP #$01
     BEQ drawThrowingItem
 
-    RTS
+    JMP exitSubrotine
 
 drawThrowingItem:
 
@@ -1649,6 +1682,74 @@ continueDrawThrowingItem:
 
     LDA itemX
     STA $0243
+
+exitSubrotine:
+
+    JSR drawAliens
+
+    RTS
+.endproc
+; 244
+
+.proc drawAliens
+
+    LDA alien1IsAlive
+    CMP #$01
+    BNE exitSubrotine
+
+    LDA alien1Y
+    SEC
+    SBC #$08
+    STA $0244
+
+    LDA alien1Direction
+    CMP #$01
+    BEQ invertAlien1
+
+    LDA #%00000010
+    STA $0246
+    LDA #%00000010
+    STA $024A
+
+    JMP continueDrawAlien1
+
+invertAlien1:
+
+    LDA #%01000010
+    STA $0246
+    LDA #%01000010
+    STA $024A
+
+continueDrawAlien1:
+
+    LDA alien1X
+    STA $0247
+
+    LDA alien1Y
+    STA $0248
+
+    LDA alien1X
+    STA $024B
+
+    LDA alien1State
+    CMP #$00
+    BNE setAlien1Flexed
+
+    LDA #ALIEN_HEAD_TILE
+    STA $0245
+
+    LDA #ALIEN_LEGS_TILE
+    STA $0249
+
+    JMP exitSubrotine
+
+setAlien1Flexed:
+
+    LDA #ALIEN_FLEXED_HEAD_TILE
+    STA $0245
+
+    LDA #ALIEN_FLEXED_LEGS_TILE
+    STA $0249
 
 exitSubrotine:
 
@@ -1710,6 +1811,282 @@ exitSubrotine:
 
 .endproc
 
+.proc updateAliens
+
+    LDA alien1IsAlive
+    CMP #$01
+    BNE goToAlien2
+
+    LDA alien1State
+    CMP #$00
+    BEQ alien1State0
+    CMP #$01
+    BEQ alien1State1
+    CMP #$02
+    BEQ alien1State2
+    CMP #$03
+    BEQ alien1State3
+
+alien1State0:
+
+    LDA alien1AnimationCounter
+    CMP #$20
+    BEQ alien1ToState1
+    INC alien1AnimationCounter
+    JMP alien2
+
+alien1ToState1:
+
+    LDA #$00
+    STA alien1AnimationCounter
+    LDA #$01
+    STA alien1State
+    JMP alien2
+
+alien1State1:
+
+    LDA alien1AnimationCounter
+    CMP #$10
+    BEQ alien1ToState2
+    INC alien1AnimationCounter
+    JMP alien2
+
+alien1ToState2:
+
+    LDA #$00
+    STA alien1AnimationCounter
+    LDA #$02
+    STA alien1State
+
+    LDA alien1Y
+    SEC
+    SBC #$0F
+    STA alien1YLimit
+    JMP alien2
+
+alien1State2:
+
+    LDA alien1Y
+    CMP alien1YLimit
+    BCC alien1ToState3
+
+    DEC alien1Y
+
+    LDA alien1X
+    CMP playerX
+    BCC moveAlien1Right2
+    BEQ alien2
+
+    JSR alien1CheckCosHorizontal
+    LDA alien1isCollidingHorizontal
+    CMP #$01
+    BEQ alien2
+
+    DEC alien1X
+    LDA #$00
+    STA alien1Direction
+    JMP alien2
+
+goToAlien2:
+
+    JMP alien2
+
+moveAlien1Right2:
+
+    JSR alien1CheckCosHorizontal
+    LDA alien1isCollidingHorizontal
+    CMP #$01
+    BEQ alien2
+    
+    INC alien1X
+    LDA #$01
+    STA alien1Direction
+    JMP alien2
+
+alien1ToState3:
+
+    LDA #$03
+    STA alien1State
+    JMP alien2
+
+alien1State3:
+
+    JSR alien1CheckCosVertical
+    LDA alien1isCollidingVertical
+    CMP #$01
+    BEQ alien1ToState0
+
+    JSR alien1CheckCosHorizontal
+    LDA alien1isCollidingHorizontal
+    CMP #$01
+    BEQ alien2
+
+    INC alien1Y
+
+    LDA alien1X
+    CMP playerX
+    BCC moveAlien1Right3
+    BEQ alien2
+
+    DEC alien1X
+    LDA #$00
+    STA alien1Direction
+    JMP alien2
+
+moveAlien1Right3:
+
+    JSR alien1CheckCosHorizontal
+    LDA alien1isCollidingHorizontal
+    CMP #$01
+    BEQ alien2
+
+    INC alien1X
+    LDA #$01
+    STA alien1Direction
+    JMP alien2
+
+alien1ToState0:
+
+    LDA #$00
+    STA alien1AnimationCounter
+    LDA #$00
+    STA alien1State
+    JMP alien2
+
+alien2:
+exitSubrotine:
+
+    RTS
+.endproc
+
+.proc alien1CheckCosHorizontal
+
+    LDY isCollidingHorizontal
+
+    LDA alien1X
+    STA checkCosAX
+    
+    LDA alien1Y
+    SEC
+    SBC #$06
+    STA checkCosAY
+
+    LDA #$07
+    STA checkCosAWidth
+    STA checkCosAHeight
+
+    LDX #$00
+    LDY #$00
+    STX alien1isCollidingHorizontal
+
+loopCos:
+
+    INX
+
+    LDA level1_part1Cos, X
+    STA checkCosBX
+
+    INX
+
+    LDA level1_part1Cos, X
+    STA checkCosBY
+
+    LDA level1_part1Cos, X
+    STA checkCosBWidth
+
+    INX
+
+    LDA level1_part1Cos, X
+    STA checkCosBHeight
+
+    INX
+
+    JSR setupCos
+    JSR checkCosHorizontal
+
+    LDA isCollidingHorizontal
+    CMP #$01
+    BEQ collisionFound
+
+    INY
+    CPY #LEVEL_1_PART1_TOTAL_COS
+    BNE loopCos
+
+    LDA #$00
+    STA alien1isCollidingHorizontal
+    RTS
+
+collisionFound:
+
+    LDA #$01
+    STA alien1isCollidingHorizontal
+    RTS
+.endproc
+
+.proc alien1CheckCosVertical
+
+    LDY isCollidingVertical
+
+    LDA alien1X
+    STA checkCosAX
+    
+    LDA alien1Y
+    SEC
+    SBC #$06
+    STA checkCosAY
+
+    LDA #$07
+    STA checkCosAWidth
+    STA checkCosAHeight
+
+    LDX #$00
+    LDY #$00
+    STX alien1isCollidingVertical
+
+loopCos:
+
+    INX
+
+    LDA level1_part1Cos, X
+    STA checkCosBX
+
+    INX
+
+    LDA level1_part1Cos, X
+    STA checkCosBY
+
+    LDA level1_part1Cos, X
+    STA checkCosBWidth
+
+    INX
+
+    LDA level1_part1Cos, X
+    STA checkCosBHeight
+
+    INX
+
+    JSR setupCos
+    JSR checkCosVertical
+
+    LDA isCollidingVertical
+    CMP #$01
+    BEQ collisionFound
+
+    INY
+    CPY #LEVEL_1_PART1_TOTAL_COS
+    BNE loopCos
+
+    LDA #$00
+    STA alien1isCollidingVertical
+    RTS
+
+collisionFound:
+
+    LDA #$01
+    STA alien1isCollidingVertical
+    RTS
+.endproc
+
 .proc clearOAM
 
     LDX #$00
@@ -1748,6 +2125,13 @@ loop:
 
     LDA #$01
     STA playerDirection
+    STA alien1IsAlive
+
+    LDA #$6A
+    STA alien1X
+    LDA #$C1
+    STA alien1Y
+
 
     LDA #%00000000
     STA PPUMASK
@@ -2061,7 +2445,6 @@ level1_part1Cos:
     .byte $02, $49, $D6, $07, $07
     .byte $02, $50, $D7, $07, $07
     .byte $02, $57, $D8, $07, $07
-
 
 .segment "CHR"
 .incbin "game.chr"
