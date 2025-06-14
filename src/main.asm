@@ -90,6 +90,10 @@
     
     alien1Direction: .res 1
 
+    decrementHealthCounter: .res 1
+
+    currentLevelPart: .res 1
+
     world: .res 2
 
 .segment "CODE"
@@ -180,6 +184,8 @@ continue:
     STA alien1YLimit
     STA alien1isCollidingVertical
     STA alien1isCollidingHorizontal
+    STA decrementHealthCounter
+    STA currentLevelPart
     
     STA alien1Direction
 
@@ -467,7 +473,7 @@ checkIfShouldUpdateItem:
     CMP #$01
     BEQ updateItem
 
-    JMP exitSubrotine
+    JMP checkCosWithAlien
 
 updateItem:
 
@@ -534,7 +540,7 @@ stopItem:
     STA playerIsThrowingItem
     STA itemIsReturning
 
-    JMP exitSubrotine
+    JMP checkCosWithAlien
 
 moveItemLeft:
 
@@ -543,7 +549,7 @@ moveItemLeft:
     SBC #$02
     STA itemX
 
-    JMP exitSubrotine
+    JMP checkCosWithAlien
 
 moveItemRight:
 
@@ -552,7 +558,60 @@ moveItemRight:
     ADC #$02
     STA itemX
 
-    JMP exitSubrotine
+    JMP checkCosWithAlien
+
+checkCosWithAlien:
+
+    LDA alien1IsAlive
+    CMP #$01
+    BNE exitSubrotine
+
+    LDA alien1X
+    STA checkCosAX
+
+    LDA alien1Y
+    STA checkCosAY
+
+    LDA #$07
+    STA checkCosAWidth
+    STA checkCosBHeight
+
+    LDA playerX
+    SEC
+    SBC #$01
+    STA checkCosBX
+
+    LDA playerY
+    STA checkCosBY
+
+    LDA #PLAYER_WIDTH
+    STA checkCosBWidth
+
+    LDA #PLAYER_HEIGHT
+    STA checkCosBHeight
+
+    JSR setupCos
+
+    JSR checkCosHorizontal
+
+    LDA isCollidingHorizontal
+    CMP #$01
+    BNE exitSubrotine
+
+    JSR checkCosVertical
+
+    LDA isCollidingVertical
+    CMP #$01
+    BNE exitSubrotine
+
+    INC decrementHealthCounter
+    LDA decrementHealthCounter
+    CMP #$32
+    BNE exitSubrotine
+
+    JSR decrementPlayerHealth
+    LDA #$00
+    STA decrementHealthCounter
 
 exitSubrotine:
 
@@ -1777,13 +1836,31 @@ exitSubrotine:
     BEQ adjustTo9
 
     DEC digit2
-    JMP exitSubrotine
+    JMP checkIfDied
 
 adjustTo9:
 
     LDA #$09
     STA digit2
     DEC digit1
+
+checkIfDied:
+
+    LDA digit1
+    CMP #$06
+    BCC exitSubrotine
+
+    LDA #$00
+    STA digit1
+    STA digit2
+
+    LDA currentLevelPart
+    CMP #$00
+    BEQ currentLevelPart1
+
+currentLevelPart1:
+
+    JSR setupInGameLevel1
 
 exitSubrotine:
 
