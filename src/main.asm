@@ -84,6 +84,8 @@
 
     alien1YLimit: .res 1
 
+    alien1Health: .res 1
+
     alien1isCollidingVertical: .res 1
 
     alien1isCollidingHorizontal: .res 1
@@ -480,6 +482,39 @@ updateItem:
     LDA itemIsReturning
     CMP #$01
     BEQ returnItem
+    
+    LDA alien1IsAlive
+    CMP #$01
+    BNE continueUpdateItem
+
+    LDA playerX
+    STA checkCosAX
+    LDA playerY
+    STA checkCosAY
+    LDA #PLAYER_WIDTH
+    STA checkCosAWidth
+    LDA #PLAYER_HEIGHT
+    STA checkCosAHeight
+
+    LDA alien1X
+    STA checkCosBX
+    LDA alien1Y
+    STA checkCosBY
+
+    LDA #$07
+    STA checkCosAWidth
+    STA checkCosAHeight
+
+    JSR setupCos
+    JSR checkCos
+
+    LDA isColliding
+    CMP #$01
+    BNE continueUpdateItem
+
+    JSR decrementAlienHealth
+
+continueUpdateItem:
 
     LDA itemX
     CMP #$00
@@ -1748,7 +1783,6 @@ exitSubrotine:
 
     RTS
 .endproc
-; 244
 
 .proc drawAliens
 
@@ -2209,6 +2243,8 @@ loop:
     LDA #$C1
     STA alien1Y
 
+    LDA #$1A
+    STA alien1Health
 
     LDA #%00000000
     STA PPUMASK
@@ -2401,6 +2437,23 @@ exitSubrotine:
     RTS
 .endproc
 
+.proc decrementAlienHealth
+
+    DEC alien1Health
+
+    LDA alien1Health
+    CMP #$00
+    BNE exitSubrotine
+
+    LDA #$00
+    STA alien1IsAlive
+
+exitSubrotine:
+
+    RTS
+
+.endproc
+
 .segment "VECTORS"
     .addr nmi_handler, reset_handler, irq_handler
 
@@ -2522,6 +2575,10 @@ level1_part1Cos:
     .byte $02, $49, $D6, $07, $07
     .byte $02, $50, $D7, $07, $07
     .byte $02, $57, $D8, $07, $07
+
+    .byte $00, $B8, $E0, $40, $07
+
+    .byte $03, $C8, $D8, $40, $07
 
 .segment "CHR"
 .incbin "game.chr"
